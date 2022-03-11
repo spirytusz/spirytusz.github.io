@@ -1,63 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://spirytusz.github.io/about/</loc>
-    <lastmod>2022-03-11</lastmod>
-  </url>
-  <url>
-    <loc>https://spirytusz.github.io/va-analysis/</loc>
+    <loc>https://spirytusz.com/va-analysis/</loc>
     <lastmod>2022-03-06</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/aboutSynchronized/</loc>
+    <loc>https://spirytusz.com/aboutSynchronized/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/DFS/</loc>
+    <loc>https://spirytusz.com/DFS/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/AIDLInAndroid/</loc>
+    <loc>https://spirytusz.com/AIDLInAndroid/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/AndroidLua/</loc>
+    <loc>https://spirytusz.com/AndroidLua/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/DraggableFloatingActionButton/</loc>
+    <loc>https://spirytusz.com/DraggableFloatingActionButton/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/HelloWorld/</loc>
+    <loc>https://spirytusz.com/HelloWorld/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/lua-impression/</loc>
+    <loc>https://spirytusz.com/lua-impression/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/Observer/</loc>
+    <loc>https://spirytusz.com/Observer/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/quicksort/</loc>
+    <loc>https://spirytusz.com/quicksort/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/Singleton/</loc>
+    <loc>https://spirytusz.com/Singleton/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/synchronizedObjects/</loc>
+    <loc>https://spirytusz.com/synchronizedObjects/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/theSummaryOf2018/</loc>
+    <loc>https://spirytusz.com/theSummaryOf2018/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.github.io/gson-analysis/</loc>
+    <loc>https://spirytusz.com/gson-analysis/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
 </urlset> 
