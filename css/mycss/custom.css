@@ -1,0 +1,4 @@
+/* https://stackoverflow.com/a/34173631 */
+td.diagonalFalling {
+	background: linear-gradient(to right top, #ffffff 0%,#ffffff 49.9%,#eeeeeeee 50%,#eeeeeeee 51%,#ffffff 51.1%,#ffffff 100%);
+}

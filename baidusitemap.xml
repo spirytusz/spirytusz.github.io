@@ -1,35 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://spirytusz.com/va-analysis/</loc>
-    <lastmod>2022-03-06</lastmod>
+    <loc>https://spirytusz.com/android-view-measure/</loc>
+    <lastmod>2022-04-06</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/android-view-layout/</loc>
+    <lastmod>2022-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/android-view-perform-traversals/</loc>
+    <lastmod>2022-04-01</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/android-view-startup/</loc>
+    <lastmod>2022-03-15</lastmod>
   </url>
   <url>
     <loc>https://spirytusz.com/aboutSynchronized/</loc>
-    <lastmod>2022-03-05</lastmod>
+    <lastmod>2022-03-14</lastmod>
   </url>
   <url>
     <loc>https://spirytusz.com/DFS/</loc>
-    <lastmod>2022-03-05</lastmod>
+    <lastmod>2022-03-14</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/DraggableFloatingActionButton/</loc>
+    <lastmod>2022-03-14</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/AndroidLua/</loc>
+    <lastmod>2022-03-14</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/lua-impression/</loc>
+    <lastmod>2022-03-14</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/gson-analysis/</loc>
+    <lastmod>2022-03-14</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/va-analysis/</loc>
+    <lastmod>2022-03-14</lastmod>
   </url>
   <url>
     <loc>https://spirytusz.com/AIDLInAndroid/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
-    <loc>https://spirytusz.com/AndroidLua/</loc>
-    <lastmod>2022-03-05</lastmod>
-  </url>
-  <url>
-    <loc>https://spirytusz.com/DraggableFloatingActionButton/</loc>
-    <lastmod>2022-03-05</lastmod>
-  </url>
-  <url>
     <loc>https://spirytusz.com/HelloWorld/</loc>
-    <lastmod>2022-03-05</lastmod>
-  </url>
-  <url>
-    <loc>https://spirytusz.com/lua-impression/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
   <url>
@@ -50,10 +70,6 @@
   </url>
   <url>
     <loc>https://spirytusz.com/theSummaryOf2018/</loc>
-    <lastmod>2022-03-05</lastmod>
-  </url>
-  <url>
-    <loc>https://spirytusz.com/gson-analysis/</loc>
     <lastmod>2022-03-05</lastmod>
   </url>
 </urlset> 
