@@ -11,15 +11,6 @@
   </url>
   
   <url>
-    <loc>https://spirytusz.com/android-view-layout/</loc>
-    
-    <lastmod>2022-04-05</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://spirytusz.com/android-view-perform-traversals/</loc>
     
     <lastmod>2022-04-01</lastmod>
@@ -198,6 +189,13 @@
   </url>
   
   <url>
+    <loc>https://spirytusz.com/tags/lua/</loc>
+    <lastmod>2022-04-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://spirytusz.com/tags/%E5%A4%9A%E8%BF%9B%E7%A8%8B/</loc>
     <lastmod>2022-04-06</lastmod>
     <changefreq>weekly</changefreq>
@@ -206,13 +204,6 @@
   
   <url>
     <loc>https://spirytusz.com/tags/%E7%AE%97%E6%B3%95/</loc>
-    <lastmod>2022-04-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://spirytusz.com/tags/lua/</loc>
     <lastmod>2022-04-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
