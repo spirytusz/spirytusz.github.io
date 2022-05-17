@@ -2,6 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://spirytusz.com/android-view-draw/</loc>
+    
+    <lastmod>2022-04-26</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://spirytusz.com/android-view-layout/</loc>
+    
+    <lastmod>2022-04-10</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://spirytusz.com/android-view-measure/</loc>
     
     <lastmod>2022-04-06</lastmod>
@@ -175,7 +193,7 @@
 
   <url>
     <loc>https://spirytusz.com/</loc>
-    <lastmod>2022-04-06</lastmod>
+    <lastmod>2022-05-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -183,63 +201,63 @@
   
   <url>
     <loc>https://spirytusz.com/tags/Android/</loc>
-    <lastmod>2022-04-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://spirytusz.com/tags/lua/</loc>
-    <lastmod>2022-04-06</lastmod>
+    <lastmod>2022-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://spirytusz.com/tags/%E5%A4%9A%E8%BF%9B%E7%A8%8B/</loc>
-    <lastmod>2022-04-06</lastmod>
+    <lastmod>2022-05-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://spirytusz.com/tags/lua/</loc>
+    <lastmod>2022-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://spirytusz.com/tags/%E7%AE%97%E6%B3%95/</loc>
-    <lastmod>2022-04-06</lastmod>
+    <lastmod>2022-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://spirytusz.com/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/</loc>
-    <lastmod>2022-04-06</lastmod>
+    <lastmod>2022-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://spirytusz.com/tags/Java/</loc>
-    <lastmod>2022-04-06</lastmod>
+    <lastmod>2022-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://spirytusz.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/</loc>
-    <lastmod>2022-04-06</lastmod>
+    <lastmod>2022-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://spirytusz.com/tags/json/</loc>
-    <lastmod>2022-04-06</lastmod>
+    <lastmod>2022-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://spirytusz.com/tags/%E6%8F%92%E4%BB%B6%E5%8C%96/</loc>
-    <lastmod>2022-04-06</lastmod>
+    <lastmod>2022-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>

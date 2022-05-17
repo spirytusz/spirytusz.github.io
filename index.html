@@ -188,6 +188,58 @@
 
 <div class="post-preview">
 
+    <a href="/android-view-draw/">
+        <h2 class="post-title">
+            Android View体系 - 绘制篇
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+             前言
+View的绘制流程主要解决的是画什么的问题。在View树这一结构下，每个View是如何解决画什么的问题的？本文将从源码的角度，尝试理解View树的绘制流程。
+ 术语
+下文可能会出现这些术语，为了让读者更方便理解，先打通这几个术语：
+ 硬件绘制
+所谓的硬件绘制（硬件加速），指的是绘制的操作交给GPU，绘制的结果存储在显存中。在API 14及其以后默认开启硬件绘制。
+ 软件绘制
+所谓的软......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-04-10
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/android-view-layout/">
+        <h2 class="post-title">
+            Android View体系 - 布局篇
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+             前言
+在上篇文章Android View体系 - 测量篇中，我们知道：每个View都会接收来自父View的MeasureSpec来进行测量，在确保自身能够独立完成测量逻辑的同时，也能向下推导，促使其子View的测量。
+与测量流程同为View三大流程的布局流程，是如何独立完成自身的布局流程，又能向下推导，促使孩子节点的布局的？本文将围绕着View布局流程的源码，尝试探索View的布局流程。
+......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-04-05
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
     <a href="/android-view-measure/">
         <h2 class="post-title">
             Android View体系 - 测量篇
@@ -196,13 +248,11 @@
             
         </h3>
         <div class="post-content-preview">
-            前言
-View的三大流程之一：测量要解决的问题就是画多大的问题。我们都知道，Android的View结构是一个多叉树，在这么一个数据结构之下，每个节点View是如何知道它能画多大的呢？
+             前言
+View的三大流程之一：测量要解决的问题就是画多大的问题。我们都知道，Android的View结构是一个多叉树，在这么一个数据结构之下，对于每个节点View，它们是如何独立解决画多大这个问题呢？
 本文将从源码的角度，分析View的测量代码，尝试探索View是如何解决画多大的问题。
-View的测量
-从上篇文章：Android
-View体系 -
-performTraversals篇可以知道，测量的入口在V......
+ View的测量
+从上篇文章：Android View体系 - performTraversals篇可以......
         </div>
     </a>
     <p class="post-meta">
@@ -223,10 +273,9 @@ performTraversals篇可以知道，测量的入口在V......
             
         </h3>
         <div class="post-content-preview">
-            前言
-上面文章：Android View体系 -
-启动篇中，我们知道View的三大流程都是performTraversals方法调用的。
-performTraversals作为View三大流程的入口方法，只要子View执行了requestLayout，就必然会调到ViewRootImpl的performTraversals。如此重要的方法，除了协调测量、布局和绘制这三大流程以外，perfor......
+             前言
+上面文章：Android View体系 - 启动篇中，我们知道View的三大流程都是performTraversals方法调用的。
+performTraversals作为View三大流程的入口方法，只要子View执行了requestLayout，就必然会调到ViewRootImpl的performTraversals。如此重要的方法，除了协调测量、布局和绘制这三大流程以外，perfo......
         </div>
     </a>
     <p class="post-meta">
@@ -247,11 +296,11 @@ performTraversals作为View三大流程的入口方法，只要子View执行了r
             
         </h3>
         <div class="post-content-preview">
-            前言
+             前言
 点击Launcher的应用图标，到应用的主页展示到屏幕的过程中，Android系统是如何将画面渲染出来的？
 本文将分析应用启动时View相关的代码，理解启动期间View的相关代码，理解View、Window、WindowManager、ViewRootImpl和Activity之间的关系。
-启动
-我们都知道Android应用进程的入口是ActivityThread的main方法。在经过......
+ 启动
+我们都知道Android应用进程的入口是ActivityThread的main方法。在......
         </div>
     </a>
     <p class="post-meta">
@@ -272,15 +321,10 @@ performTraversals作为View三大流程的入口方法，只要子View执行了r
             
         </h3>
         <div class="post-content-preview">
-            前言
+             前言
 VirtualApp是一款运行于Android系统的虚拟框架，允许在其中创建虚拟空间，并在这个虚拟空间中运行其他应用，并对该应用具有完全的控制能力。
 本文将配合VirtualApp的源码，简单介绍VirtualApp免安装启动apk的Activity的基本原理，以及相关的检测方案。
-名词约定
-
-
-
-
-
+ 名词约定
 
 
 
@@ -296,7 +340,7 @@ VA
 -
 
 
-VActivit......
+VActivityMa......
         </div>
     </a>
     <p class="post-meta">
@@ -317,16 +361,16 @@ VActivit......
             
         </h3>
         <div class="post-content-preview">
-            1. 前言
+             1. 前言
 Gson是一个Java平台的Json库，用于json的序列化和反序列化。
 实践发现对于大的json字符串转换成实例的时间性能并不是很好。
 本文将从源码的角度探索Gson反序列化json耗时的原因，并给出大致的解决方案。
 
-2. 太长不看
+ 2. 太长不看
 Gson反序列化耗时的原因有三（影响大小递减）：
 
 默认的TypeAdapter会反射遍历类及其超类的所有字段，并生成一个Map表；
-默认的Ty......
+默认的......
         </div>
     </a>
     <p class="post-meta">
@@ -347,9 +391,9 @@ Gson反序列化耗时的原因有三（影响大小递减）：
             
         </h3>
         <div class="post-content-preview">
-            0. 前言
-    最近一直在写Lua脚本，有时候出了问题，不知道是Lua层的问题，还是上游的问题，不知道从何下手。于是我学习了一点C/C++和JNI，把整个解析Lua脚本包、执行Lua脚本的流程全部都读了一遍。熟悉了一遍之后，就萌生了自己封一个Android跑Lua脚本库的想法。于是就有这篇博文。C/C++和Kotlin我都不熟，所以这次我主要用这两种语言来写（所以会很Java
-Style......
+             0. 前言
+    最近一直在写Lua脚本，有时候出了问题，不知道是Lua层的问题，还是上游的问题，不知道从何下手。于是我学习了一点C/C和JNI，把整个解析Lua脚本包、执行Lua脚本的流程全部都读了一遍。熟悉了一遍之后，就萌生了自己封一个Android跑Lua脚本库的想法。于是就有这篇博文。C/C和Kotlin我都不熟，所以这次我主要用这两种语言来写（所以会很Java Style）。
+......
         </div>
     </a>
     <p class="post-meta">
@@ -370,12 +414,12 @@ Style......
             
         </h3>
         <div class="post-content-preview">
-            0. 前言
+             0. 前言
 最近学习了Lua语言，记录一下自己觉得对几个重要概念的学习过程。
 
-1. Table
+ 1. Table
 table是Lua语言的一个重要的数据结构。它很像一个Map，我们可以通过给出一个key来获得对应的value。并且，table的key可以是除nil以外的任意类型。看代码：
-123456789101112131415161718local tab = &#123;&#125;tab.a = 1......
+123456789101112131415161718local tab = &#123;&#125;tab.a =......
         </div>
     </a>
     <p class="post-meta">
@@ -407,61 +451,6 @@ table是Lua语言的一个重要的数据结构。它很像一个Map，我们可
     <p class="post-meta">
         Posted by spirytusz on
         2018-12-31
-    </p>
-
-</div>
-<hr>
-
-<div class="post-preview">
-
-    <a href="/AIDLInAndroid/">
-        <h2 class="post-title">
-            记一次AIDL的学习与实践
-        </h2>
-        <h3 class="post-subtitle">
-            
-        </h3>
-        <div class="post-content-preview">
-            1. 前言
-终于考完试了hhh，终于有时间更新博客了。正好之前自学跨进程编程，写个博文记录一下。
-
-2. Android中的多进程
-在Android中，默认情况下，应用中的组件是运行在同一个进程的。我们可以在AndroidManifest.xml中使用android:process属性来为四大组件指定运行的进程。比如对于Service：
-1234&lt;service ...    andr......
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by spirytusz on
-        2018-11-25
-    </p>
-
-</div>
-<hr>
-
-<div class="post-preview">
-
-    <a href="/DFS/">
-        <h2 class="post-title">
-            关于深度优先搜索的一点小心得
-        </h2>
-        <h3 class="post-subtitle">
-            
-        </h3>
-        <div class="post-content-preview">
-            1. 前言
-上周刷了20来道LeetCode的题，总结出了一些关于深度优先搜索的小小的心得，于是有了这篇博客。这次的总体思路是：
-1. 深度优先搜索算法的工作过程 2. 如何使用深度优先搜索算法来进行遍历 3.
-两个有趣的问题 4. 深度优先搜索算法和循环的关系
-那我们开始吧。
-
-2. 深度优先搜索
-深度优先搜索（Deep First Search,
-DFS）是一种先序遍历，先遇到的节点先访......
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by SpirytusZ on
-        2018-10-18
     </p>
 
 </div>
