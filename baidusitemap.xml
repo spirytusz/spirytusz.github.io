@@ -2,7 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://spirytusz.com/multi-project-aggregation/</loc>
-    <lastmod>2022-08-11</lastmod>
+    <lastmod>2022-08-29</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/kotlin-coroutine-nonblocking-suspend/</loc>
+    <lastmod>2022-08-29</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/kotlin-coroutine-context/</loc>
+    <lastmod>2022-08-29</lastmod>
+  </url>
+  <url>
+    <loc>https://spirytusz.com/kotlin-coroutine-launch/</loc>
+    <lastmod>2022-08-29</lastmod>
   </url>
   <url>
     <loc>https://spirytusz.com/android-view-draw/</loc>

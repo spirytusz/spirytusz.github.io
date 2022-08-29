@@ -188,6 +188,85 @@
 
 <div class="post-preview">
 
+    <a href="/gson-analysis/">
+        <h2 class="post-title">
+            Gson原理分析
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+             1. 前言
+Gson是一个Java平台的Json库，用于json的序列化和反序列化。
+实践发现对于大的json字符串转换成实例的时间性能并不是很好。
+本文将从源码的角度探索Gson反序列化json耗时的原因，并给出大致的解决方案。
+
+ 2. 太长不看
+Gson反序列化耗时的原因有三（影响大小递减）：
+
+默认的TypeAdapter会反射遍历类及其超类的所有字段，并生成一个Map表；
+默认的......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by spirytusz on
+        2021-10-12
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/AndroidLua/">
+        <h2 class="post-title">
+            记Android层执行Lua脚本的一次实践
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+             0. 前言
+    最近一直在写Lua脚本，有时候出了问题，不知道是Lua层的问题，还是上游的问题，不知道从何下手。于是我学习了一点C/C和JNI，把整个解析Lua脚本包、执行Lua脚本的流程全部都读了一遍。熟悉了一遍之后，就萌生了自己封一个Android跑Lua脚本库的想法。于是就有这篇博文。C/C和Kotlin我都不熟，所以这次我主要用这两种语言来写（所以会很Java Style）。
+......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2019-07-23
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/lua-impression/">
+        <h2 class="post-title">
+            Lua语言学习笔记
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+             0. 前言
+最近学习了Lua语言，记录一下自己觉得对几个重要概念的学习过程。
+
+ 1. Table
+table是Lua语言的一个重要的数据结构。它很像一个Map，我们可以通过给出一个key来获得对应的value。并且，table的key可以是除nil以外的任意类型。看代码：
+123456789101112131415161718local tab = &#123;&#125;tab.a =......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by spirytusz on
+        2019-04-26
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
     <a href="/theSummaryOf2018/">
         <h2 class="post-title">
             2018年度总结
@@ -222,12 +301,12 @@
             
         </h3>
         <div class="post-content-preview">
-            1. 前言
+             1. 前言
 终于考完试了hhh，终于有时间更新博客了。正好之前自学跨进程编程，写个博文记录一下。
 
-2. Android中的多进程
+ 2. Android中的多进程
 在Android中，默认情况下，应用中的组件是运行在同一个进程的。我们可以在AndroidManifest.xml中使用android:process属性来为四大组件指定运行的进程。比如对于Service：
-1234&lt;service ...    andr......
+1234&lt;service ...    an......
         </div>
     </a>
     <p class="post-meta">
@@ -248,15 +327,18 @@
             
         </h3>
         <div class="post-content-preview">
-            1. 前言
+             1. 前言
 上周刷了20来道LeetCode的题，总结出了一些关于深度优先搜索的小小的心得，于是有了这篇博客。这次的总体思路是：
-1. 深度优先搜索算法的工作过程 2. 如何使用深度优先搜索算法来进行遍历 3.
-两个有趣的问题 4. 深度优先搜索算法和循环的关系
+
+深度优先搜索算法的工作过程
+如何使用深度优先搜索算法来进行遍历
+两个有趣的问题
+深度优先搜索算法和循环的关系
+
 那我们开始吧。
 
-2. 深度优先搜索
-深度优先搜索（Deep First Search,
-DFS）是一种先序遍历，先遇到的节点先访......
+ 2. 深度优先搜索
+深度优先搜索（Deep First Search, DFS）是一种先序遍历，先遇到的节点先访问，然后以这个节......
         </div>
     </a>
     <p class="post-meta">
@@ -277,12 +359,12 @@ DFS）是一种先序遍历，先遇到的节点先访......
             
         </h3>
         <div class="post-content-preview">
-            1. 前言
+             1. 前言
 最近忙着实习和秋招，挤不出时间来写博客。正好现在中秋放假，有时间了，就把我之前想了好久的都写出来吧。这次的主题是有关单例的。
 
-2. 从最简单的单例说起
+ 2. 从最简单的单例说起
 单例，本质就是内存中只有一个实例（严格来说不是这样的，我们只需保证主内存中只有一个实例）。基于此，单例是好实现的：
-1234567891011121314public class Singleton &#123;    priv......
+1234567891011121314public class Singleton &#123;    pr......
         </div>
     </a>
     <p class="post-meta">
@@ -303,13 +385,13 @@ DFS）是一种先序遍历，先遇到的节点先访......
             
         </h3>
         <div class="post-content-preview">
-            前言
-FloatingActionButton是Google力推的一个Material
-Design控件。最近做的一个项目，需要实现一个可以左右滑动，松手回到原位的FloatingActionButton。研究了大半天就写出来了，于是写写这片博客记录一下。
+             前言
+FloatingActionButton是Google力推的一个Material Design控件。最近做的一个项目，需要实现一个可以左右滑动，松手回到原位的FloatingActionButton。研究了大半天就写出来了，于是写写这片博客记录一下。
 
-MotionEvent的事件
+ MotionEvent的事件
 当我们点击一个view，或者拖动一个view到处滑动时，都会产生一个MotionEvent事件。
-* 当......
+
+......
         </div>
     </a>
     <p class="post-meta">
@@ -330,12 +412,12 @@ MotionEvent的事件
             
         </h3>
         <div class="post-content-preview">
-            前言
+             前言
 嗯，观察者模式在Android开发中还是挺常用的，比如说Adapter数据更新后RecyclerView的刷新，以及四大组件的Broadcast等等。接下来本文将简单谈谈设计模式中的观察和模式。
 为了有更好的食用体验，本文会结合一个简单的例子，让你更好的理解观察者模式。
 
-一、观察者模式
-先来看看定义：定义对象之间的一对多依赖关系，当一个对象改变状态时，它的所有依赖对象都会自动获得通知......
+ 一、观察者模式
+先来看看定义：定义对象之间的一对多依赖关系，当一个对象改变状态时，它的所有依赖对象都会自动获得......
         </div>
     </a>
     <p class="post-meta">
@@ -356,91 +438,21 @@ MotionEvent的事件
             
         </h3>
         <div class="post-content-preview">
-            前言
+             前言
 快速排序，就像它的名字一样，它做排序很快，空间复杂度O(1)下，它的平均时间复杂度为O(nlog2n)。但是在某些情况下，快速排序不快了，表现出来的性能和冒泡排序排序这类时间复杂度为O(n2)相差无几。因此，本文将解决：
-* 快速排序的工作原理 * 重复元素下的快排 * 基本有序下数组下的快排
 
-一、快速排序是如何工作的？
-个人理解，快速排序的工作原理：每轮任意选定一个支点pivot然......
+快速排序的工作原理
+重复元素下的快排
+基本有序下数组下的快排
+
+
+ 一、快速排序是如何工作的？
+个人理解，快速排序的工作原理：每轮任意选定一个支点pivot然后确......
         </div>
     </a>
     <p class="post-meta">
         Posted by spirytusz on
         2018-07-24
-    </p>
-
-</div>
-<hr>
-
-<div class="post-preview">
-
-    <a href="/synchronizedObjects/">
-        <h2 class="post-title">
-            Synchronized的正确食用方法
-        </h2>
-        <h3 class="post-subtitle">
-            
-        </h3>
-        <div class="post-content-preview">
-            前言
-前面的博客《浅谈synchronized的实现原理》谈到synchronized的实现原理，简单而言就是锁住了对象。但是似乎还比较抽象，本篇博客将解决：
-* synchronized锁住的是哪个对象？ * 如何合理使用synchronized？
-那么开始吧。 
-一、synchronized的两种用法
-synchronized有两种基本用法说起，分别是同步语句块和同步方法。
-1.1.同步......
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by spirytusz on
-        2018-07-18
-    </p>
-
-</div>
-<hr>
-
-<div class="post-preview">
-
-    <a href="/aboutSynchronized/">
-        <h2 class="post-title">
-            浅谈synchronized的实现原理
-        </h2>
-        <h3 class="post-subtitle">
-            
-        </h3>
-        <div class="post-content-preview">
-            前言
-Synchronized是Java中的重量级锁，在我刚学Java多线程编程时，我只知道它的实现和monitor有关，但是synchronized和monitor的关系，以及monitor的本质究竟是什么，我并没有尝试理解，而是选择简单的略过。在最近的一段时间，由于实际的需要，我又把这个问题翻出来，Google了很多资料，整个实现的过程总算是弄懂了，为了以防遗忘，便整理成了这篇博客。
-在......
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by SpirytusZ on
-        2018-07-13
-    </p>
-
-</div>
-<hr>
-
-<div class="post-preview">
-
-    <a href="/HelloWorld/">
-        <h2 class="post-title">
-            Hello World!
-        </h2>
-        <h3 class="post-subtitle">
-            
-        </h3>
-        <div class="post-content-preview">
-            Hello World！ 博客终于搭起来啦！
-搭博客没有别的目的，只为输出倒逼输入，自己给别人讲清楚了，才能对知识的理解更近一步！
-第一次也不知道该怎么说，就以我第一个编写的程序结尾吧！ Best Practice12345#include &lt;stdio.h&gt;void main()&#123;    printf(&quot;Hello World!&quot;);&#125;
-...
-        </div>
-    </a>
-    <p class="post-meta">
-        Posted by spirytusz on
-        2018-05-21
     </p>
 
 </div>
@@ -456,6 +468,10 @@ Synchronized是Java中的重量级锁，在我刚学Java多线程编程时，我
             <a href="/">&larr; Newer Posts</a>
         </li>
     
+    
+        <li class="next">
+            <a href="/page/3/">Older Posts &rarr;</a>
+        </li>
     
 </ul>
 

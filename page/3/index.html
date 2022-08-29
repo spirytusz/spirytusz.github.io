@@ -13,11 +13,11 @@
 
     <title>
         
-          Hello World! - SpirytusZ&#39;s Blog
+          SpirytusZ&#39;s Blog
         
     </title>
 
-    <link rel="canonical" href="https://spirytusz.com/HelloWorld/">
+    <link rel="canonical" href="https://spirytusz.com/page/3/">
 
     <!-- Bootstrap Core CSS -->
     
@@ -151,99 +151,194 @@
 
 
     <!-- Main Content -->
-    
-<!-- Image to hack wechat -->
-<!-- <img src="https://spirytusz.com/img/icon_wechat.png" width="0" height="0"> -->
-<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
-
-<!-- Post Header -->
-<style type="text/css">
-    header.intro-header{
-        background-image: url('/img/home-bg.webp')
-    }
-</style>
-<header class="intro-header" >
+    <!-- Page Header -->
+<header class="intro-header" style="background-image: url('/img/home-bg.webp')">
     <div class="container">
         <div class="row">
-            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                <div class="post-heading">
-                    <div class="tags">
-                        
-                    </div>
-                    <h1>Hello World!</h1>
-                    <h2 class="subheading"></h2>
-                    <span class="meta">
-                        Posted by spirytusz on
-                        2018-05-21
-                    </span>
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 ">
+                <div class="site-heading">
+                    <h1>SpirytusZ&#39;s Blog</h1>
+                    <!--<hr class="small">-->
+                    <span class="subheading"></span>
                 </div>
             </div>
         </div>
     </div>
 </header>
 
-<!-- Post Content -->
-<article>
-    <div class="container">
-        <div class="row">
 
+
+<!-- Main Content -->
+<div class="container">
+    <div class="row">
+        
+
+<!-- USE SIDEBAR -->
     <!-- Post Container -->
             <div class="
-                col-lg-8 col-lg-offset-2
-                col-md-10 col-md-offset-1
-                post-container">
+                col-lg-8 col-lg-offset-1
+                col-md-8 col-md-offset-1
+                col-sm-12
+                col-xs-12
+                post-container
+            ">
 
-                <p>Hello World！<br />
-博客终于搭起来啦！<br />
-搭博客没有别的目的，只为<strong>输出倒逼输入</strong>，自己给别人讲清楚了，才能对知识的理解更近一步！<br />
-第一次也不知道该怎么说，就以我第一个编写的程序结尾吧！</p>
-<figure class="highlight c"><figcaption><span>Best Practice</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">void</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Hello World!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+                <!-- Main Content -->
 
-                <hr>
 
-                
+<div class="post-preview">
 
-                <ul class="pager">
-                    
-                        <li class="previous">
-                            <a href="/aboutSynchronized/" data-toggle="tooltip" data-placement="top" title="浅谈synchronized的实现原理">&larr; Previous Post</a>
-                        </li>
-                    
-                    
-                </ul>
+    <a href="/synchronizedObjects/">
+        <h2 class="post-title">
+            Synchronized的正确食用方法
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+             前言
+前面的博客《浅谈synchronized的实现原理》谈到synchronized的实现原理，简单而言就是锁住了对象。但是似乎还比较抽象，本篇博客将解决：
 
-                
+synchronized锁住的是哪个对象？
+如何合理使用synchronized？
+那么开始吧。
 
+
+ 一、synchronized的两种用法
+synchronized有两种基本用法说起，分别是同步语句块和同步方法。
+ 1.1.同......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by spirytusz on
+        2018-07-18
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/aboutSynchronized/">
+        <h2 class="post-title">
+            浅谈synchronized的实现原理
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+             前言
+Synchronized是Java中的重量级锁，在我刚学Java多线程编程时，我只知道它的实现和monitor有关，但是synchronized和monitor的关系，以及monitor的本质究竟是什么，我并没有尝试理解，而是选择简单的略过。在最近的一段时间，由于实际的需要，我又把这个问题翻出来，Google了很多资料，整个实现的过程总算是弄懂了，为了以防遗忘，便整理成了这篇博客。
+......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2018-07-13
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/HelloWorld/">
+        <h2 class="post-title">
+            Hello World!
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            Hello World！
+博客终于搭起来啦！
+搭博客没有别的目的，只为输出倒逼输入，自己给别人讲清楚了，才能对知识的理解更近一步！
+第一次也不知道该怎么说，就以我第一个编写的程序结尾吧！
+Best Practice12345#include &lt;stdio.h&gt;void main()&#123;    printf(&quot;Hello World!&quot;);&#125;...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by spirytusz on
+        2018-05-21
+    </p>
+
+</div>
+<hr>
+
+
+
+<!-- Pager -->
+
+<ul class="pager">
+    
+        <li class="previous">
+            <a href="/page/2/">&larr; Newer Posts</a>
+        </li>
+    
+    
+</ul>
+
+
+
+                <!-- 如果开启评论功能 -->
                 
 
             </div>
-    <!-- Side Catalog Container -->
-        
-
     <!-- Sidebar Container -->
-
             <div class="
-                col-lg-8 col-lg-offset-2
-                col-md-10 col-md-offset-1
-                sidebar-container">
-
+                col-lg-3 col-lg-offset-0
+                col-md-3 col-md-offset-0
+                col-sm-12
+                col-xs-12
+                sidebar-container
+            ">
                 <!-- Featured Tags -->
                 
+
+                <!-- Short About -->
+                <section class="visible-md visible-lg">
+                    <hr><h5><a href="/about/">ABOUT ME</a></h5>
+                    <div class="short-about">
+
+                        
+                            <img src="/img/avatar.png" />
+                        
+
+                        
+
+                        <!-- SNS Link -->
+                        <ul class="list-inline">
+                            
+                            
+                            
+
+                            
+
+                            
+
+                            
+                                <li>
+                                    <a target="_blank"  href="https://github.com/spirytusz">
+                                        <span class="fa-stack fa-lg">
+                                            <i class="fa fa-circle fa-stack-2x"></i>
+                                            <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                        </span>
+                                    </a>
+                                </li>
+                            
+
+
+                            
+                        </ul>
+                    </div>
+                </section>
 
                 <!-- Friends Blog -->
                 
             </div>
-
-        </div>
+        
     </div>
-</article>
-
-
-
-
-
-
-
+</div>
 
 
     <!-- Footer -->

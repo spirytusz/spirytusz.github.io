@@ -178,9 +178,9 @@
                 
                     <a href="#多进程" title="多进程" rel="1">多进程</a>
                 
-                    <a href="#算法" title="算法" rel="2">算法</a>
-                
                     <a href="#lua" title="lua" rel="2">lua</a>
+                
+                    <a href="#算法" title="算法" rel="2">算法</a>
                 
                     <a href="#设计模式" title="设计模式" rel="2">设计模式</a>
                 
@@ -188,9 +188,15 @@
                 
                     <a href="#多线程" title="多线程" rel="2">多线程</a>
                 
-                    <a href="#Gradle" title="Gradle" rel="1">Gradle</a>
-                
                     <a href="#json" title="json" rel="1">json</a>
+                
+                    <a href="#Kotlin - Coroutine" title="Kotlin - Coroutine" rel="2">Kotlin - Coroutine</a>
+                
+                    <a href="#Kotlin" title="Kotlin" rel="1">Kotlin</a>
+                
+                    <a href="#Coroutine" title="Coroutine" rel="1">Coroutine</a>
+                
+                    <a href="#Gradle" title="Gradle" rel="1">Gradle</a>
                 
                     <a href="#插件化" title="插件化" rel="1">插件化</a>
                 
@@ -254,9 +260,9 @@
                   <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
                   </li> -->
                  <div class="post-preview">
-                     <a href="/android-view-layout/">
+                     <a href="/android-view-draw/">
                         <h2 class="post-title">
-                            Android View体系 - 布局篇
+                            Android View体系 - 绘制篇
                         </h2>
                         
                     </a>
@@ -269,9 +275,9 @@
                   <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
                   </li> -->
                  <div class="post-preview">
-                     <a href="/android-view-draw/">
+                     <a href="/android-view-layout/">
                         <h2 class="post-title">
-                            Android View体系 - 绘制篇
+                            Android View体系 - 布局篇
                         </h2>
                         
                     </a>
@@ -364,43 +370,6 @@
             </div>
             
             <div class="one-tag-list">
-                <span class="fa fa-tag listing-seperator" id="算法">
-                    <span class="tag-text">算法</span>
-                </span>
-                
-                  <!-- <li class="listing-item">
-                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
-                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
-                  </li> -->
-                 <div class="post-preview">
-                     <a href="/DFS/">
-                        <h2 class="post-title">
-                            关于深度优先搜索的一点小心得
-                        </h2>
-                        
-                    </a>
-                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
-                </div>
-                <hr>
-                
-                  <!-- <li class="listing-item">
-                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
-                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
-                  </li> -->
-                 <div class="post-preview">
-                     <a href="/quicksort/">
-                        <h2 class="post-title">
-                            快速排序不快了？重复元素下的快速排序
-                        </h2>
-                        
-                    </a>
-                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
-                </div>
-                <hr>
-                
-            </div>
-            
-            <div class="one-tag-list">
                 <span class="fa fa-tag listing-seperator" id="lua">
                     <span class="tag-text">lua</span>
                 </span>
@@ -428,6 +397,43 @@
                      <a href="/lua-impression/">
                         <h2 class="post-title">
                             Lua语言学习笔记
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="算法">
+                    <span class="tag-text">算法</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
+                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
+                  </li> -->
+                 <div class="post-preview">
+                     <a href="/DFS/">
+                        <h2 class="post-title">
+                            关于深度优先搜索的一点小心得
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
+                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
+                  </li> -->
+                 <div class="post-preview">
+                     <a href="/quicksort/">
+                        <h2 class="post-title">
+                            快速排序不快了？重复元素下的快速排序
                         </h2>
                         
                     </a>
@@ -549,6 +555,125 @@
             </div>
             
             <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="json">
+                    <span class="tag-text">json</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
+                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
+                  </li> -->
+                 <div class="post-preview">
+                     <a href="/gson-analysis/">
+                        <h2 class="post-title">
+                            Gson原理分析
+                        </h2>
+                        
+                    </a>
+                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Kotlin - Coroutine">
+                    <span class="tag-text">Kotlin - Coroutine</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
+                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
+                  </li> -->
+                 <div class="post-preview">
+                     <a href="/kotlin-coroutine-launch/">
+                        <h2 class="post-title">
+                            浅谈Kotlin协程(2)
+                        </h2>
+                        
+                            <h3 class="post-subtitle">
+                                协程的启动和执行
+                            </h3>
+                        
+                    </a>
+                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
+                </div>
+                <hr>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
+                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
+                  </li> -->
+                 <div class="post-preview">
+                     <a href="/kotlin-coroutine-context/">
+                        <h2 class="post-title">
+                            浅谈Kotlin协程(1)
+                        </h2>
+                        
+                            <h3 class="post-subtitle">
+                                Kotlin协程上下文是什么
+                            </h3>
+                        
+                    </a>
+                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Kotlin">
+                    <span class="tag-text">Kotlin</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
+                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
+                  </li> -->
+                 <div class="post-preview">
+                     <a href="/kotlin-coroutine-nonblocking-suspend/">
+                        <h2 class="post-title">
+                            浅谈Kotlin协程(3)
+                        </h2>
+                        
+                            <h3 class="post-subtitle">
+                                非阻塞式挂起与恢复
+                            </h3>
+                        
+                    </a>
+                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
+                <span class="fa fa-tag listing-seperator" id="Coroutine">
+                    <span class="tag-text">Coroutine</span>
+                </span>
+                
+                  <!-- <li class="listing-item">
+                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
+                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
+                  </li> -->
+                 <div class="post-preview">
+                     <a href="/kotlin-coroutine-nonblocking-suspend/">
+                        <h2 class="post-title">
+                            浅谈Kotlin协程(3)
+                        </h2>
+                        
+                            <h3 class="post-subtitle">
+                                非阻塞式挂起与恢复
+                            </h3>
+                        
+                    </a>
+                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
+                </div>
+                <hr>
+                
+            </div>
+            
+            <div class="one-tag-list">
                 <span class="fa fa-tag listing-seperator" id="Gradle">
                     <span class="tag-text">Gradle</span>
                 </span>
@@ -564,30 +689,8 @@
                         </h2>
                         
                             <h3 class="post-subtitle">
-                                —— 一种无侵入、零反射的SPI实现方案
+                                一种无侵入、零反射的SPI实现方案
                             </h3>
-                        
-                    </a>
-                    <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
-                </div>
-                <hr>
-                
-            </div>
-            
-            <div class="one-tag-list">
-                <span class="fa fa-tag listing-seperator" id="json">
-                    <span class="tag-text">json</span>
-                </span>
-                
-                  <!-- <li class="listing-item">
-                  <time datetime="{{ post.date | date:"%Y-%m-%d" }}">{{ post.date | date:"%Y-%m-%d" }}</time>
-                  <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a>
-                  </li> -->
-                 <div class="post-preview">
-                     <a href="/gson-analysis/">
-                        <h2 class="post-title">
-                            Gson原理分析
-                        </h2>
                         
                     </a>
                     <!-- <p class="post-meta">{{ post.date | date:"%Y-%m-%d" }}</p> -->
