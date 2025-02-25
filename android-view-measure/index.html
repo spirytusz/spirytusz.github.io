@@ -203,7 +203,7 @@
 <p>进入到if分支，如果是强制布局，就会走测量流程：调用onMeasure；否则就会使用上次的缓存，调用setMeasuredDimensionRaw保存结果。</p>
 <p>最后将测量结果保存到缓存中，测量结束。</p>
 <h1 id="MeasureSpec"><a href="#MeasureSpec" class="headerlink" title="MeasureSpec"></a>MeasureSpec</h1><p>在测量过程中，频繁出现<code>MeasureSpec</code>的身影，<code>MeasureSpec</code>是什么？我认为是父<code>View</code>对子<code>View</code>的约束，子<code>View</code>需要在这个约束之下进行测量。<code>MeasureSpec</code>的结构如下：</p>
-<p><img src="/measurespec_struct.svg"></p>
+<p><img src="/android-view-measure/measurespec_struct.drawio.png"></p>
 <p>可以从图中看出：</p>
 <ul>
 <li>size ∈ [1, 2^30^ -1]</li>
@@ -245,7 +245,7 @@
 <p>既然<code>View</code>的数据结构是一个多叉树，那么包含有子<code>View</code>的<code>ViewGroup</code>是如何测量的呢？</p>
 <p>显而易见，<code>ViewGroup</code>需要先测量它的所有子<code>View</code>，然后根据测量结果，才能测量自身。如果把<code>View</code>当做一棵树来看，测量的过程就是后序遍历。</p>
 <p>因此，对于每个<code>View</code>节点，其测量过程必然是这样的：</p>
-<p><img src="/view_group_measure.drawio.svg"></p>
+<p><img src="/android-view-measure/view_group_measure.drawio.png"></p>
 <p>检查<code>ViewGroup</code>的代码发现，<code>ViewGroup</code>并没有重写onMeasure方法，需要找<code>ViewGroup</code>的子类验证父<code>View</code>与子<code>View</code>的测量逻辑。以<code>FrameLayout</code>为例：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// FrameLayout.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onMeasure</span><span class="params">(<span class="type">int</span> widthMeasureSpec, <span class="type">int</span> heightMeasureSpec)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">int</span> <span class="variable">maxHeight</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> <span class="variable">maxWidth</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">View</span> <span class="variable">child</span> <span class="operator">=</span> getChildAt(i);</span><br><span class="line">        measureChildWithMargins(child, widthMeasureSpec, <span class="number">0</span>, heightMeasureSpec, <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">final</span> <span class="type">LayoutParams</span> <span class="variable">lp</span> <span class="operator">=</span> (LayoutParams) child.getLayoutParams();</span><br><span class="line">        maxWidth = Math.max(maxWidth,</span><br><span class="line">                child.getMeasuredWidth() + lp.leftMargin + lp.rightMargin);</span><br><span class="line">        maxHeight = Math.max(maxHeight,</span><br><span class="line">                child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, childState),</span><br><span class="line">        resolveSizeAndState(maxHeight, heightMeasureSpec,</span><br><span class="line">                childState &lt;&lt; MEASURED_HEIGHT_STATE_SHIFT));</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -314,7 +314,7 @@
 <li>自底向上逐级测量，并设置测量结果</li>
 </ul>
 <p>以上过程可以用一张图来概括：</p>
-<p><img src="/view_recursively_draw.drawio.svg"></p>
+<p><img src="/android-view-measure/view_recursively_draw.drawio.png"></p>
 <h1 id="打破约束？"><a href="#打破约束？" class="headerlink" title="打破约束？"></a>打破约束？</h1><p>管中窥豹，从<code>FrameLayout</code>的测量逻辑中，我们可以发现一棵<code>View</code>树的测量是：</p>
 <ul>
 <li>从根节点到叶子结点层层传递约束、发起测量请求</li>

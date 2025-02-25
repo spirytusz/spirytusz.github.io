@@ -232,7 +232,7 @@
 <li>在<code>Activity</code>回调onStart后，<code>ActivityThread</code>会把这个<code>Activity</code>设置为可见；</li>
 <li>在<code>Activity</code>回调onResume后，会通过<code>WindowManagerGlobal</code>创建一个<code>ViewRootImpl</code>，此后通过<code>ViewRootImpl</code>请求第一次布局，在通过<code>Choregrapher</code>请求第一次VSync信号；之后收到VSync信号后，执行performTraversals，正式进入View的三大流程: 测量、布局以及绘制。</li>
 </ol>
-<p><img src="/android-view-startup.svg" alt="android-view-startup"></p>
+<p><img src="/android-view-startup/android-view-startup.drawio.png" alt="android-view-startup"></p>
 
 
                 <hr>

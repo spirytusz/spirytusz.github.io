@@ -306,7 +306,7 @@
 </ul>
 <p>而后通过dispatchDraw继续向其子<code>View</code>递归，将绘制请求传递给子<code>View</code>，直至叶子节点。</p>
 <p>最终都会调用<code>RecordingCanvas.drawRenderNode</code>，将<code>View</code>的内容渲染到渲染缓冲区中，等待渲染到屏幕上；</p>
-<p>一图以蔽之，硬件绘制的流程（使用虚线代表向子<code>View</code>递归的过程）：<br><img src="/android_view_hardware_draw.drawio.svg"></p>
+<p>一图以蔽之，硬件绘制的流程（使用虚线代表向子<code>View</code>递归的过程）：<br><img src="/android-view-draw/android_view_hardware_draw.drawio.png"></p>
 <h2 id="层级绘制-软件绘制"><a href="#层级绘制-软件绘制" class="headerlink" title="层级绘制 - 软件绘制"></a>层级绘制 - 软件绘制</h2><p>如果<code>ThreadedRenderer</code>的isEnable方法返回了false，说明关闭了硬件加速，就会采用软件绘制。软件绘制的入口在<code>ViewRootImpl</code>的drawSoftware方法中，它会直接调用<code>View</code>的<code>draw(Canvas)</code>方法：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">drawSoftware</span><span class="params">(...)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    canvas = surface.lockCanvas(dirty);</span><br><span class="line">    ...</span><br><span class="line">    mView.draw(canvas);</span><br><span class="line">    ...</span><br><span class="line">    surface.unlockCanvasAndPost(canvas);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -322,8 +322,8 @@
 <p>可以认为在软件绘制过程中，使用的<code>Canvas</code>与硬件绘制的完全不同，说明硬件绘制和软件绘制的实现是不同的。</p>
 <p>回到drawSoftware方法，drawSoftware方法调用<code>View</code>的<code>draw(Canvas)</code>方法执行绘制逻辑。<code>draw(Canvas)</code>方法上文硬件绘制时已经分析过，只不过这里传递的<code>Canvas</code>是普通的<code>Canvas</code>。</p>
 <p>一图以蔽之（虚线代表向子<code>View</code>递归）：</p>
-<p><img src="/android_view_software_draw.drawio.svg"></p>
-<p>总体而言，一次<code>View</code>树的完整绘制流程如图所示（虚线代表向子<code>View</code>递归）：<br><img src="/android_view_software_hardware_draw.drawio.svg"></p>
+<p><img src="/android-view-draw/android_view_software_draw.drawio.png"></p>
+<p>总体而言，一次<code>View</code>树的完整绘制流程如图所示（虚线代表向子<code>View</code>递归）：<br><img src="/android-view-draw/android_view_software_hardware_draw.drawio.png"></p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><code>View</code>的绘制分为硬件绘制和软件绘制，对于<code>View</code>树上的每一个节点<code>View</code>:</p>
 <ul>
 <li><p>软件绘制</p>

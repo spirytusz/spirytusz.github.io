@@ -246,7 +246,7 @@
 <li>margin - 子<code>View</code>主动让出的空间</li>
 </ul>
 <p>一图胜千言：</p>
-<p><img src="/frame_layout_child_layout.drawio.svg"></p>
+<p><img src="/android-view-layout/frame_layout_child_layout.drawio.png"></p>
 <h1 id="View树的布局"><a href="#View树的布局" class="headerlink" title="View树的布局"></a>View树的布局</h1><p>了解了坐标系、padding和margin后，就可以从<code>FrameLayout</code>的布局代码，还原出整棵<code>View</code>树的布局流程：</p>
 <ol>
 <li>父<code>View</code>调用setFrame为自己圈定布局的矩形范围；</li>
@@ -254,7 +254,7 @@
 <li>在这个矩形区域内，根据子<code>View</code>的margin、measuredWidth和measuredHeight，布局子<code>View</code>；</li>
 </ol>
 <p>总而言之，一棵<code>View</code>树的布局流程如图：</p>
-<p><img src="/view_tree_layout.drawio.svg"></p>
+<p><img src="/android-view-layout/view_tree_layout.drawio.png"></p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><code>View</code>布局的总体流程相较于<code>View</code>测量的而言较为简单，主要分为是否有子<code>View</code>这两种情况：</p>
 <ul>
 <li>有子<code>View</code> - <code>ViewGroup</code>会首先调用setFrame圈住一个(left, top, right, bottom)的矩形区域，再通过onLayout调用子<code>View</code>的layout方法为子<code>View</code>布局；</li>
