@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          既然要单例，那就单例到底 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/Singleton/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('Singleton_cover.jpg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#设计模式" title="设计模式">设计模式</a>
+                        
+                    </div>
+                    <h1>既然要单例，那就单例到底</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by spirytusz on
+                        2018-09-22
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h2><p>最近忙着实习和秋招，挤不出时间来写博客。正好现在中秋放假，有时间了，就把我之前想了好久的都写出来吧。这次的主题是有关单例的。</p>
+<span id="more"></span>
+
+<h2 id="2-从最简单的单例说起"><a href="#2-从最简单的单例说起" class="headerlink" title="2. 从最简单的单例说起"></a>2. 从最简单的单例说起</h2><p>单例，本质就是内存中只有一个实例（严格来说不是这样的，我们只需保证主内存中只有一个实例）。基于此，单例是好实现的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Singleton</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton INSTANCE;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">Singleton</span><span class="params">()</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title function_">getInstance</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (INSTANCE == <span class="literal">null</span>) &#123;</span><br><span class="line">            INSTANCE = <span class="keyword">new</span> <span class="title class_">Singleton</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> INSTANCE;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码不长，需要注意的地方也不多。首先，构造方法是private的，这保证其他类不能随意new出一个对象；其次，本类的实例INSTANCE及其getter是static的，保证内存中只有一个实例的同时，也可以通过类名来获取本类的实例。<br>这个单例的实现很朴素，在单线程的环境下工作是值得信赖的。</p>
+<h2 id="3-多线程下的单例出现的问题"><a href="#3-多线程下的单例出现的问题" class="headerlink" title="3. 多线程下的单例出现的问题"></a>3. 多线程下的单例出现的问题</h2><p>单线程的环境下，上面的单例是能够准确的工作的。那么在多线程环境下，上面的单例能够准确的工作吗？不如实验一下，实验代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TestClass</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">TEST_CASE_COUNT</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">startToGetInstance</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">Runnable</span> <span class="variable">runnable</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">                System.out.println(Singleton.getInstance().hashCode());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; TEST_CASE_COUNT; i++) &#123;</span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">Thread</span>(runnable).start();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">TestClass</span>().startToGetInstance();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出是：</p>
+<img src="/Singleton/under_multi_threads_result.png" class="" title="under multi threads">
+
+<p>上面的结果表明，存在线程中创建出来的Singleton对象与其他线程的创建的hashcode不一致的问题，即不满足单例。<br>问题出在哪里？因为Singleton的getter方法不是原子操作，或者更进一步来说，new出一个对象不是一个原子操作。new出一个对象的一个粗略过程是（顺序可能不对，但这不是重点）：</p>
+<ul>
+<li>分配内存空间</li>
+<li>引用指向分配的内存空间</li>
+<li>执行构造函数<br>这表明，虽然语言层面上创建一个对象的new操作仅仅只是一个语句，但是“水面”之下却有多个复杂的过程在支撑，new并不是一个原子操作！因此，上面的单例在多线程环境下不再可靠。</li>
+</ul>
+<h2 id="4-多线程单例的初步解决方案"><a href="#4-多线程单例的初步解决方案" class="headerlink" title="4. 多线程单例的初步解决方案"></a>4. 多线程单例的初步解决方案</h2><p>简单的单例不可靠，是因为new不是一个原子操作，那不简单，一个解决方案就出来了，同步整个getter：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">static</span> Singleton <span class="title function_">getInstance</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (INSTANCE == <span class="literal">null</span>) &#123;</span><br><span class="line">        INSTANCE = <span class="keyword">new</span> <span class="title class_">Singleton</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> INSTANCE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是，方法级的同步无疑会降低整体性能，我们需要尽可能多的异步，尽可能少的同步。况且，在实际中，getInstance中的操作可能不止有创建实例的行为（不推荐这么做，但是有时不得已而为之），为了实现单例，这个代价可能有点大。所以应该尽可能减少同步语句块的长度（我们称之为减少同步的粒度）。因此，现在就有两种貌似可行的方案出来了：<br>方案一：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title function_">getInstance</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (INSTANCE == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (Singleton.class) &#123;</span><br><span class="line">            INSTANCE = <span class="keyword">new</span> <span class="title class_">Singleton</span>();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> INSTANCE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>方案二：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title function_">getInstance</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (Singleton.class) &#123;</span><br><span class="line">        <span class="keyword">if</span> (INSTANCE == <span class="literal">null</span>) &#123;</span><br><span class="line">            INSTANCE = <span class="keyword">new</span> <span class="title class_">Singleton</span>();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> INSTANCE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这两个貌似看似可行，但是在实验环境或者实际环境中它们都出现了不同的问题。</p>
+<ul>
+<li><p>对于方案一：<br>确实，这段代码减少了同步的粒度，同步的部分只是new出一个对象。但是，当第一次创建实例的时候，至少有2个以上线程同时调用Singleton的getter方法，则存在以下情况：<br><strong>线程a、线程b都已经在同步代码块的门口，即if分支语句内，synchronized语句块外</strong><br>线程a、线程b其中一个被调度了，另一个阻塞了，就令被调度的线程为线程a吧：线程a执行完毕后，线程b就被唤醒继而执行同步语句块，实例被创建两次，自然地两次的实例不是同一个实例，不满足单例的条件。因此，方案一不可行。</p>
+</li>
+<li><p>对于方案二：<br>这个方案我发现好像没有人提，在我学单例模式的时候自己想到的一个，想了想发现有问题，就顺便提一下。这段代码确实能够保证单例，但问题出在其他地方：我们获取Singleton的实例，一般都是通过：<br><strong>Singleton.getInstance()</strong><br>来获取。然而，每次获取实例，同步代码块都一定会执行一次，每次获取实例都会请求锁，释放锁，开销是十分大的。因此这段代码的根本问题就是为了单例而付出的代价比较大。所以能不用就不用（事实上有更好的解决方案）。</p>
+</li>
+</ul>
+<p>上面两种方案要么不可行要么不好，因此出现了更好的方案——双检锁方案。</p>
+<h2 id="5-双检锁方案"><a href="#5-双检锁方案" class="headerlink" title="5. 双检锁方案"></a>5. 双检锁方案</h2><p>双检锁（Double Check Locking, DCL)，即两检一锁，检是if，锁是synchronized：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title function_">getInstance</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (INSTANCE == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (Singleton.class) &#123;</span><br><span class="line">            <span class="keyword">if</span> (INSTANCE == <span class="literal">null</span>) &#123;</span><br><span class="line">                INSTANCE = <span class="keyword">new</span> <span class="title class_">Singleton</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> INSTANCE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>个人认为双检锁是上面提到的方案一的改进。既然任意线程进入同步代码块以后，INSTANCE可能不为空，因此就用if再检查一次：若为空则new一个，否则什么也不做。<br>在相当长的一段时间内，我认为双检锁或许就是单例的封笔了。但是事实果真如此吗？</p>
+<h2 id="6-一些必要的知识准备"><a href="#6-一些必要的知识准备" class="headerlink" title="6. 一些必要的知识准备"></a>6. 一些必要的知识准备</h2><p>双检锁方案确实有一点问题，在说明这些问题前需要这些这些知识：</p>
+<ul>
+<li>原子性、可见性以及有序性</li>
+<li>指令重排序</li>
+</ul>
+<p>如果已经对这些知识有所了解，可以跳过这一小段。</p>
+<h3 id="6-1-原子性、可见性以及有序性"><a href="#6-1-原子性、可见性以及有序性" class="headerlink" title="6.1. 原子性、可见性以及有序性"></a>6.1. 原子性、可见性以及有序性</h3><p>个人认为，在多线程环境下，只要保证原子性，以及足够的可见性和有序性，就能够保证线程安全。下面对这三个性质分别解释。</p>
+<h4 id="6-1-1-原子性"><a href="#6-1-1-原子性" class="headerlink" title="6.1.1. 原子性"></a>6.1.1. 原子性</h4><p>如果一个操作满足原子性，这表明这个操作是不可以被打断的：要么不执行，要么就一次性执行完毕。这个好理解，我们常常接触的synchronized关键词能够保证代码块、方法执行的原子性：所有线程对同步代码块和同步方法的访问是互斥的，即被synchronized所修饰的代码块或方法的执行时不可以被打断的。</p>
+<h4 id="6-1-2-可见性"><a href="#6-1-2-可见性" class="headerlink" title="6.1.2. 可见性"></a>6.1.2. 可见性</h4><p>所谓可见性，就是在多线程环境下，一个线程的操作对其他所有的线程是可见的。何为可见？即线程A修改了变量i的值，在其他线程被唤醒时，他们看（读取）到的i是线程A修改后的值。但是这些字我都认识，但是拼起来怎么就不懂了？或者觉得定义可见性是多此一举的操作？实则不然，其实只要清楚Java内存模型(Java Memory Model, JMM)，就能明白定义可见性的必要性：</p>
+<img src="/Singleton/working_memory_and_main_memory.png" class="" title="Java内存模型">
+<p>这是多线程环境下线程的工作模型。在多线程环境下，线程们并不是如我所想的那样直接从内存中取数据的，而是从他们的工作存储中取数据。而工作存储中的数据来源，是从主内存中拷贝来的。因此，JMM描述的工作过程是这样的：某个线程启动后从主内存中拷贝共享数据到它的私有空间，然后对这个私有空间读写一顿操作后，再写回主内存。所谓的“对所有线程可见”，就是其他线程在读取主内存前，被某一个线程修改的变量已经被写回主内存了，从而读取的值是已被修改的。</p>
+<h4 id="6-1-3-有序性"><a href="#6-1-3-有序性" class="headerlink" title="6.1.3. 有序性"></a>6.1.3. 有序性</h4><p>有序性，就是CPU能够按照程序员编写的代码顺序来执行。但是如果发生指令重排序，有序性就不能完全保证。</p>
+<h3 id="6-2-指令重排序"><a href="#6-2-指令重排序" class="headerlink" title="6.2. 指令重排序"></a>6.2. 指令重排序</h3><p>指令重排序是指编译器或硬件不按照原有代码的顺序执行，而是对其重新排序后再执行，以达到提高效率的目的。这里只讨论编译器级别的重排序，硬件级别的重排序不讨论。<br>编译器对代码进行重新排序是为了提高执行效率，比如下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> a;</span><br><span class="line"><span class="type">boolean</span> b;</span><br><span class="line">a = <span class="number">1</span>;</span><br><span class="line">b = <span class="literal">false</span>;</span><br></pre></td></tr></table></figure>
+<p>重排序后可能是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="variable">a</span> <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"><span class="type">boolean</span> <span class="variable">b</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br></pre></td></tr></table></figure>
+<p>或者是其他不影响结果的形式。<br>何为“不影响结果”？就是在单线程环境下，不进行重排序与进行重排序执行完毕后，所有的变量值是一致的。<br>譬如，对于这段代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> a;</span><br><span class="line">a = <span class="number">2333</span>; <span class="comment">// ①</span></span><br><span class="line">a = a + <span class="number">1</span>; <span class="comment">// ②</span></span><br><span class="line"><span class="type">int</span> <span class="variable">b</span> <span class="operator">=</span> a * a; <span class="comment">// ③</span></span><br></pre></td></tr></table></figure>
+<p>语句③的结果依赖于语句②，语句②的结果依赖于语句①，即依赖关系：语句① &lt;– 语句② &lt;– 语句③。<br>如果对这段代码进行重排序，其结果必然与不进行重排序的不一致。因此，编译器不会对这段代码进行重排序。</p>
+<h2 id="双检锁方案存在的问题及其解决方法"><a href="#双检锁方案存在的问题及其解决方法" class="headerlink" title="双检锁方案存在的问题及其解决方法"></a>双检锁方案存在的问题及其解决方法</h2>
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/DFS/" data-toggle="tooltip" data-placement="top" title="关于深度优先搜索的一点小心得">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/DraggableFloatingActionButton/" data-toggle="tooltip" data-placement="top" title="可拖拽的FloatingActionButton">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/Singleton/";
+    var disqus_url = "https://spirytusz.co/Singleton/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Page Header -->
+<header class="intro-header" style="background-image: url('/img/home-bg.webp')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 ">
+                <div class="site-heading">
+                    <h1>SpirytusZ&#39;s Blog</h1>
+                    <!--<hr class="small">-->
+                    <span class="subheading"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+<!-- Main Content -->
+<div class="container">
+    <div class="row">
+        
+
+<!-- USE SIDEBAR -->
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-1
+                col-md-8 col-md-offset-1
+                col-sm-12
+                col-xs-12
+                post-container
+            ">
+            
+                <!-- Main Content -->
+
+
+<div class="post-preview">
+
+    <a href="/kotlin-coroutine-nonblocking-suspend/">
+        <h2 class="post-title">
+            浅谈Kotlin协程(3)
+        </h2>
+        <h3 class="post-subtitle">
+            非阻塞式挂起与恢复
+        </h3>
+        <div class="post-content-preview">
+            前言在学习Kotlin协程的过程中，非阻塞式挂起这个概念一直困扰着我。挂起是什么？又是怎么个非阻塞式法？挂起后又如何恢复？这是《深入理解Kotlin协程》的读书笔记，记录我对非阻塞式挂起和恢复的一些理解。
+挂起函数上文浅谈Kotlin协程(2)——协程的启动和执行中，我们已经知道协程体代码都被编译器编译在了invokeSuspend方法中。如果涉及到普通函数的调用，编译出来的代码与源码并无二......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-09-04
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/kotlin-coroutine-exception/">
+        <h2 class="post-title">
+            浅谈Kotlin协程(4)
+        </h2>
+        <h3 class="post-subtitle">
+            异常处理
+        </h3>
+        <div class="post-content-preview">
+            前言挂起函数提供了切换调用栈后自动切回来的能力。那么
+
+这对挂起函数异常的捕获有何影响？
+当协程发生异常时，协程内如何传递异常？
+协程间如何传播异常？
+
+本文是我对《深入理解Kotlin协程》的读书笔记，记录我对协程异常处理的理解。
+协程内的异常捕获在实践中我们可以使用try-catch语句包裹需要捕获异常的代码，但如果被包裹的代码涉及到调用栈的切换，则捕获不了：
+1234567891011......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-08-29
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/kotlin-coroutine-launch/">
+        <h2 class="post-title">
+            浅谈Kotlin协程(2)
+        </h2>
+        <h3 class="post-subtitle">
+            协程的启动和执行
+        </h3>
+        <div class="post-content-preview">
+            前言理解Kotlin协程的启动和执行是理解Kotlin协程各种概念的基石。
+本文是《深入理解Kotlin协程》的读书笔记，记录一些我对Kotlin协程启动的源码阅读流程。
+从入口函数说起kotlinx-coroutine-core提供了一系列方法来启动协程，其中就有launch方法：
+1234567public fun CoroutineScope.launch(    context: C......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-08-20
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/kotlin-coroutine-context/">
+        <h2 class="post-title">
+            浅谈Kotlin协程(1)
+        </h2>
+        <h3 class="post-subtitle">
+            Kotlin协程上下文是什么
+        </h3>
+        <div class="post-content-preview">
+            前言我所理解的上下文是一种具有承上启下作用的对象，例如：对外获取资源，对内管理、分配资源。那么协程上下文的职责又是什么呢？本文是《深入理解Kotlin协程》的读书笔记之一，是我对Kotlin协程上下文的一些理解。
+CoroutineContext是什么协程上下文定义在kotlinx-coroutine-core中：
+123456789101112public interface Corout......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-08-15
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/multi-project-aggregation/">
+        <h2 class="post-title">
+            巧用Gradle缓存机制
+        </h2>
+        <h3 class="post-subtitle">
+            一种无侵入、零反射的SPI实现方案
+        </h3>
+        <div class="post-content-preview">
+            前言实际工程实践中，我们难免会有统一的全局服务注册中心的需求。
+
+一方面，为了达到代码隔离的目的，许多服务实现散落在多个子工程、jar、aar中，更有甚者服务实现是以runtimeOnly的形式引入——编译期不可见，只有在运行时可见；
+另一方面，统一全局服务中心本身就要求具有跨project访问服务实现的能力，这与代码隔离的目的相矛盾。
+
+很多SPI框架都需要解决这个矛盾。前段时间无意间发现......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-07-27
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/android-view-draw/">
+        <h2 class="post-title">
+            Android View体系 - 绘制篇
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            前言View的绘制流程主要解决的是画什么的问题。在View树这一结构下，每个View是如何解决画什么的问题的？本文将从源码的角度，尝试理解View树的绘制流程。
+术语下文可能会出现这些术语，为了让读者更方便理解，先打通这几个术语：
+硬件绘制所谓的硬件绘制（硬件加速），指的是绘制的操作交给GPU，绘制的结果存储在显存中。在API 14及其以后默认开启硬件绘制。
+软件绘制所谓的软件绘制，是指绘制......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-04-10
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/android-view-layout/">
+        <h2 class="post-title">
+            Android View体系 - 布局篇
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            前言在上篇文章Android View体系 - 测量篇中，我们知道：每个View都会接收来自父View的MeasureSpec来进行测量，在确保自身能够独立完成测量逻辑的同时，也能向下推导，促使其子View的测量。
+与测量流程同为View三大流程的布局流程，是如何独立完成自身的布局流程，又能向下推导，促使孩子节点的布局的？本文将围绕着View布局流程的源码，尝试探索View的布局流程。
+Vi......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-04-05
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/android-view-measure/">
+        <h2 class="post-title">
+            Android View体系 - 测量篇
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            前言View的三大流程之一：测量要解决的问题就是画多大的问题。我们都知道，Android的View结构是一个多叉树，在这么一个数据结构之下，对于每个节点View，它们是如何独立解决画多大这个问题呢？
+本文将从源码的角度，分析View的测量代码，尝试探索View是如何解决画多大的问题。
+View的测量从上篇文章：Android View体系 - performTraversals篇可以知道，测......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-03-22
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/android-view-perform-traversals/">
+        <h2 class="post-title">
+            Android View体系 - performTraversals篇
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            前言上面文章：Android View体系 - 启动篇中，我们知道View的三大流程都是performTraversals方法调用的。
+performTraversals作为View三大流程的入口方法，只要子View执行了requestLayout，就必然会调到ViewRootImpl的performTraversals。如此重要的方法，除了协调测量、布局和绘制这三大流程以外，perform......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-03-15
+    </p>
+
+</div>
+<hr>
+
+<div class="post-preview">
+
+    <a href="/android-view-startup/">
+        <h2 class="post-title">
+            Android View体系 - 启动篇
+        </h2>
+        <h3 class="post-subtitle">
+            
+        </h3>
+        <div class="post-content-preview">
+            前言点击Launcher的应用图标，到应用的主页展示到屏幕的过程中，Android系统是如何将画面渲染出来的？
+本文将分析应用启动时View相关的代码，理解启动期间View的相关代码，理解View、Window、WindowManager、ViewRootImpl和Activity之间的关系。
+启动我们都知道Android应用进程的入口是ActivityThread的main方法。在经过与s......
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by SpirytusZ on
+        2022-03-12
+    </p>
+
+</div>
+<hr>
+
+
+
+<!-- Pager -->
+
+<ul class="pager">
+    
+    
+        <li class="next">
+            <a href="/page/2/">Older Posts &rarr;</a>
+        </li>
+    
+</ul>
+
+
+
+                <!-- 如果开启评论功能 -->
+                
+
+            </div>
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-3 col-lg-offset-0
+                col-md-3 col-md-offset-0
+                col-sm-12
+                col-xs-12
+                sidebar-container
+            ">
+                <!-- Featured Tags -->
+                
+
+                <!-- Short About -->
+                <section class="visible-md visible-lg">
+                    <hr><h5><a href="/about/">ABOUT ME</a></h5>
+                    <div class="short-about">
+
+                        
+                            <img src="/img/avatar.png" />
+                        
+
+                        
+
+                        <!-- SNS Link -->
+                        <ul class="list-inline">
+                            
+                            
+                            
+
+                            
+
+                            
+
+                            
+                                <li>
+                                    <a target="_blank"  href="https://github.com/spirytusz">
+                                        <span class="fa-stack fa-lg">
+                                            <i class="fa fa-circle fa-stack-2x"></i>
+                                            <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                        </span>
+                                    </a>
+                                </li>
+                            
+                            
+                            
+                            
+                        </ul>
+                    </div>
+                </section>
+                
+                <!-- Friends Blog -->
+                
+            </div>
+        
+    </div>
+</div>
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

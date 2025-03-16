@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          巧用Gradle缓存机制 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/multi-project-aggregation/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.webp')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Gradle" title="Gradle">Gradle</a>
+                        
+                    </div>
+                    <h1>巧用Gradle缓存机制</h1>
+                    <h2 class="subheading">一种无侵入、零反射的SPI实现方案</h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2022-07-27
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>实际工程实践中，我们难免会有统一的全局服务注册中心的需求。</p>
+<ul>
+<li>一方面，为了达到代码隔离的目的，许多服务实现散落在多个子工程、jar、aar中，更有甚者服务实现是以<code>runtimeOnly</code>的形式引入——编译期不可见，只有在运行时可见；</li>
+<li>另一方面，统一全局服务中心本身就要求具有跨project访问服务实现的能力，这与代码隔离的目的相矛盾。</li>
+</ul>
+<p>很多SPI框架都需要解决这个矛盾。前段时间无意间发现了<a href="https://github.com/2BAB">2BAB</a>大佬的一个库：<a href="https://github.com/2BAB/Koncat">Koncat</a>，提出了一种跨工程代码聚合的新思路。我对这个库进行小小小的拓展，使用了<a href="https://kotlinlang.org/docs/ksp-overview.html">Kotlin Symbol Processing(KSP)</a> + 自定义Gradle Task实现了无侵入零反射的SPI方案，便有了本篇文章。</p>
+<h1 id="Service-Provider-Interface"><a href="#Service-Provider-Interface" class="headerlink" title="Service Provider Interface"></a>Service Provider Interface</h1><p>在我的理解中，<a href="https://en.wikipedia.org/wiki/Service_provider_interface">Service Provider Interface(SPI)</a>是一种获取接口实现的机制，使用者只需要提供接口类，即可获取对应接口的实现类实例。</p>
+<p>Java本身就提供了SPI机制，其实现为<code>ServiceLoader</code>。其原理是通过读取<code>resources/META-INF/services/</code>文件夹下的文本文件（文件名为接口全限定名，内容为接口实现类全限定名），然后反射创建实例，在调用方请求获取实现类的时候，再把这些实例返回给你。</p>
+<p>SPI框架更多关心的是<strong>根据接口获取接口实现类</strong>的逻辑，有将接口到实现类的映射埋藏在resources文件夹下，如这里提到的<code>ServiceProvider</code>，也有使用注解的方式处理接口到实现类的映射。由于注解的方式更加方便，因而很多SPI框架都采用着了这种方式。</p>
+<h1 id="SPI实现方案的历史"><a href="#SPI实现方案的历史" class="headerlink" title="SPI实现方案的历史"></a>SPI实现方案的历史</h1><p>在我的认知中，业界SPI框架的实现，是在不断压榨编译期性能和运行时性能下，一步一步发展过来的。</p>
+<h2 id="注解-反射"><a href="#注解-反射" class="headerlink" title="注解 &amp; 反射"></a>注解 &amp; 反射</h2><p>在我刚刚接触Android开发那会儿，SPI的实现方案是注解处理器 + 运行时反射。<br>例如，有一个服务和一个实现：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">ICameraService</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@ServiceImpl</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">CameraService</span> : <span class="type">ICameraService</span></span><br></pre></td></tr></table></figure>
+
+<p>在编译期会扫描所有的<code>@Service</code>和<code>@ServiceImpl</code>注解，生成以下类：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ICamerService_Impl_Holder</span> : <span class="type">ServiceHolder</span>&lt;<span class="type">CamerService</span>&gt; &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">create</span><span class="params">()</span></span>: CamerService = CameraService()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在运行时，反射查找类：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ServicePool</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">of</span><span class="params">(clazz: <span class="type">Class</span>&lt;<span class="type">T</span>&gt;)</span></span>: T? = getServiceHolder(clazz)?.create()</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Throw(ClassNotFoundException::class)</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">getServiceHolder</span><span class="params">(clazz: <span class="type">Class</span>&lt;<span class="type">T</span>&gt;)</span></span>: ServiceHolder&lt;T&gt;? &#123;</span><br><span class="line">        <span class="keyword">return</span> runCatching &#123; Class.forName(<span class="string">&quot;<span class="subst">$&#123;class.canonicalName&#125;</span>_Impl_Holder&quot;</span>).newInstance() &#125;.getOrNull()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种方案没有什么问题，既能够在编译期做到代码隔离，在运行时也能获取到真正的实现，很好的解决了上面的矛盾点。</p>
+<p>但是有一个微小的瑕疵：在运行时使用到了反射。在首次反射的时候，因为虚拟机没有对代码进行JIT优化，所以会慢一点；如果是在启动的时候，性能的损耗则会放大。但瑕不掩瑜，注解 + 反射的方案是能够很好的工作的。</p>
+<h2 id="Transform-字节码操纵"><a href="#Transform-字节码操纵" class="headerlink" title="Transform &amp; 字节码操纵"></a>Transform &amp; 字节码操纵</h2><p>注解 + 反射有微小的性能问题，是因为为了在源码期进行代码隔离，访问不到真正的实现，不得已才使用了反射。这个方案的问题是取舍问题，而不是能不能实现的问题。</p>
+<p>既然源码期因为代码隔离而不能实现聚合，那我们不妨把时机推后一点，不要在源码期进行代码聚合。</p>
+<p>后来了解到，<a href="https://android-doc.github.io/tools/building/plugin-for-gradle.html">Android Gradle Plugin(AGP)</a>提供了Transform机制：它提供了从<code>*.class</code>文件转化成<code>*.dex</code>文件前的hook点，开发者能对参与编译的<code>*.class</code>文件进行修改，或者新增、剔除<code>*.class</code>文件，结果会参与到编译成<code>*.dex</code>文件过程中。</p>
+<p>当源码被编译成了<code>*.class</code>文件后，就已经没有了工程的概念，这个时候我们就可以进行代码聚合，而不用担心代码隔离的问题。因此，我们可以实现一个Transform，在编译期扫描得到所有的接口实现类，并通过字节码操纵技术生成或修改<code>*.class</code>文件并输出：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ServiceProviderInterfacePlugin</span> : <span class="type">Plugin</span>&lt;<span class="type">Project</span>&gt; &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">apply</span><span class="params">(target: <span class="type">Project</span>)</span></span> &#123;</span><br><span class="line">        project.pluginManager.withPlugin(<span class="string">&quot;com.android.application&quot;</span>) &#123; </span><br><span class="line">             <span class="keyword">val</span> android = extensions.getByType(BaseAppModuleExtension::<span class="keyword">class</span>.java)</span><br><span class="line">             android.registerTransform(ServiceProviderInterfaceTransform())</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ServiceProviderInterfaceTransform</span> : <span class="type">Transform</span>() &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getName</span><span class="params">()</span></span>: String &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;ServiceProviderInterfaceTransform&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getInputTypes</span><span class="params">()</span></span>: MutableSet&lt;QualifiedContent.ContentType&gt; &#123;</span><br><span class="line">        <span class="keyword">return</span> TransformManager.CONTENT_CLASS</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">getScopes</span><span class="params">()</span></span>: MutableSet&lt;<span class="keyword">in</span> QualifiedContent.Scope&gt; &#123;</span><br><span class="line">        <span class="keyword">return</span> TransformManager.SCOPE_FULL_PROJECT</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// if this method return true, we should handle </span></span><br><span class="line">    <span class="comment">// incremental transforming properly at [transform] method</span></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">isIncremental</span><span class="params">()</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">transform</span><span class="params">(transformInvocation: <span class="type">TransformInvocation</span>?)</span></span> &#123;</span><br><span class="line">        <span class="comment">// 1. scan all jar/directory inputs</span></span><br><span class="line">        <span class="comment">// 2. write to dest location</span></span><br><span class="line">        <span class="comment">// 3. generate service registry code to dest location</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在运行时，我们无需反射，也能像直接访问类一样去获取实例：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ServiceRegistry</span> &#123;</span><br><span class="line">    <span class="keyword">companion</span> <span class="keyword">object</span> &#123;</span><br><span class="line">        <span class="comment">// do code weaving here</span></span><br><span class="line">        <span class="meta">@JvmStatic</span></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">val</span> sServicePool = listOf&lt;Any&gt;(</span><br><span class="line">            CameraService(),</span><br><span class="line">            ...</span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">of</span><span class="params">(clazz: <span class="type">Class</span>&lt;<span class="type">T</span>&gt;)</span></span>: T? = sServicePool.find &#123; clazz.instanceOf(it) &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Transform机制也能够很好的解决代码隔离与代码聚合之间的矛盾。与注解 + 反射方案不同的是，Transform方案的扫描逻辑全部交给了实现的Transform类；生成的代码，也变成了从生成源码到生成字节码。</p>
+<p>但是Transform方案也有小小的瑕疵：</p>
+<ol>
+<li>需要手动处理增量编译，否则会拖慢编译速度；</li>
+<li>由于Transform机制的内部实现，Transform运行过程中会有一些冗余的IO，间接拖慢了编译速度，还是有些许的优化空间的；</li>
+</ol>
+<p>并且，从AGP的<a href="https://developer.android.com/studio/releases/gradle-plugin">Release Note</a>和未来的<a href="https://developer.android.com/studio/releases/gradle-plugin-roadmap">时间线</a>可以看到，Transform机制已在AGP 7.0上废弃，并将在AGP 8.0上移除。基于Transform被废弃并马上被移除的现状，可以考虑使用AGP新的字节码操纵方案来代替。</p>
+<h2 id="AsmClassVisitorFactory"><a href="#AsmClassVisitorFactory" class="headerlink" title="AsmClassVisitorFactory"></a>AsmClassVisitorFactory</h2><p>既然Transform机制已经被废弃，并且在不久的将来会被移除，AGP官方就必定会提供一个替代方案。正巧，如果需要实现修改字节码功能，可以使用<code>AsmClassVisitorFactory </code>来代替。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">AsmClassVisitorFactory</span>&lt;<span class="type">ParametersT : InstrumentationParameters</span>&gt; : <span class="type">Serializable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@get:Nested</span></span><br><span class="line">    <span class="keyword">val</span> parameters: Property&lt;ParametersT&gt;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@get:Nested</span></span><br><span class="line">    <span class="keyword">val</span> instrumentationContext: InstrumentationContext</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">createClassVisitor</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        classContext: <span class="type">ClassContext</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">        nextClassVisitor: <span class="type">ClassVisitor</span></span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: ClassVisitor</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">isInstrumentable</span><span class="params">(classData: <span class="type">ClassData</span>)</span></span>: <span class="built_in">Boolean</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">ClassContext</span> &#123;</span><br><span class="line">    <span class="keyword">val</span> currentClassData: ClassData</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">loadClassData</span><span class="params">(className: <span class="type">String</span>)</span></span>: ClassData?</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">ClassData</span> &#123;</span><br><span class="line">    <span class="keyword">val</span> className: String</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> classAnnotations: List&lt;String&gt;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> interfaces: List&lt;String&gt;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> superClasses: List&lt;String&gt;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>从接口定义可以看出，我们可以通过<code>isInstrumentable </code>接口返回我们是否要处理这个类；如果我们要处理这个类，则需在<code>createClassVisitor </code>方法返回一个<code>ClassVisitor</code>，通过这个<code>ClassVisitor </code>来修改这个类。</p>
+<p>但就目前提供的接口来说，<code>AsmClassVisitorFactory </code>可能还<strong>不太适合</strong>用于处理SPI的逻辑，原因有二：</p>
+<ol>
+<li>SPI的逻辑需要扫描全部类后，再修改or新增类，然而<code>AsmClassVisitorFactory </code>目前没有提供这一时机的回调；</li>
+<li><code>AsmClassVisitorFactory </code>内部已经维护好了增量逻辑，当新增or移除服务or服务实现时，我们无从得知；</li>
+</ol>
+<p>这个时候就进退维谷，十分尴尬了：一方面旧有的Transform机制已经废弃，即将移除；另一方面新的替代方案尚不成熟，无法满足需要。因此我们需要考虑其他的方案。</p>
+<h1 id="KSP-自定义Gradle-Task"><a href="#KSP-自定义Gradle-Task" class="headerlink" title="KSP &amp; 自定义Gradle Task"></a>KSP &amp; 自定义Gradle Task</h1><p>注解+反射方案能解决代码隔离与代码聚合的问题，但是运行时的性能有小小的瑕疵；</p>
+<p>Transform方案也能解决代码隔离和代码聚合的问题，且运行时没有性能损耗，但增量编译逻辑较难维护，且Transform机制马上被移除；</p>
+<p>字节码操纵的替代方案<code>AsmClassVisitorFactory </code>无法适用于实现SPI的逻辑，因为它深度封装了执行逻辑，一些必要的细节开发者无法触碰到。</p>
+<p>我认为我们可以自己实（zao）现（ge）一（lun）个（zi）支持增量扫描 &amp; 字节码操纵的SPI插件。我简单拆解一下，至少要解决以下问题：</p>
+<ol>
+<li>单一工程增量扫描；</li>
+<li>跨工程聚合服务和接口的信息；</li>
+<li>生成服务与实现之间的映射字节码；</li>
+<li>产物字节码汇入到编译流程中；</li>
+</ol>
+<h2 id="增量扫描与代码聚合"><a href="#增量扫描与代码聚合" class="headerlink" title="增量扫描与代码聚合"></a>增量扫描与代码聚合</h2><p>目前已有开箱即用的、支持增量逻辑的代码扫描方案有：</p>
+<ul>
+<li><a href="https://kotlinlang.org/docs/kapt.html">kapt</a> </li>
+<li><a href="https://kotlinlang.org/docs/ksp-overview.html">KSP</a></li>
+<li>Transform</li>
+</ul>
+<p>kapt是一个支持kotlin语言的注解处理器，支持增量扫描，支持产物为java代码的多轮处理；</p>
+<p>KSP是google开发的源码级别的代码处理器，比kapt性能更好，功能更强，支持增量扫描和多轮处理；</p>
+<p>Transform马上被移除，不做讨论。</p>
+<p>由于KSP的性能相较于kapt更好，并且KSP支持产物为kotlin代码的多轮处理，因此最终选用KSP作为代码扫描工具。</p>
+<h3 id="使用KSP实现单一工程增量扫描"><a href="#使用KSP实现单一工程增量扫描" class="headerlink" title="使用KSP实现单一工程增量扫描"></a>使用KSP实现单一工程增量扫描</h3><p>在<code>SymbolProcessor </code>中，获取服务和实现的信息</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MetadataCollectProcessor</span>(</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> environment: SymbolProcessingEnvironment</span><br><span class="line">) : SymbolProcessor &#123;</span><br><span class="line">     <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">process</span><span class="params">(resolver: <span class="type">Resolver</span>)</span></span>: List&lt;KSAnnotated&gt; &#123;</span><br><span class="line">         <span class="comment">// 1. collect metadata ...</span></span><br><span class="line">         <span class="keyword">val</span> services = resolver.getSymbolsWithAnnotation(Service::<span class="keyword">class</span>.java.canonicalName)</span><br><span class="line">               .map &#123; ... &#125;</span><br><span class="line">         <span class="keyword">val</span> impls = resolver.getSymbolsWithAnnotation(ServiceImpl::<span class="keyword">class</span>.java.canonicalName)</span><br><span class="line">               .map &#123; ... &#125;</span><br><span class="line">         ...</span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用KSP跨工程信息聚合"><a href="#使用KSP跨工程信息聚合" class="headerlink" title="使用KSP跨工程信息聚合"></a>使用KSP跨工程信息聚合</h3><p>跨工程信息聚合，关键在于能够在某一工程（主工程）访问到其他工程的信息，并对这一信息聚合，为当前工程所用。KSP的<code>Resolver</code>提供了一个跨工程访问代码的接口，可以通过给定包名，获取当前工程和其他工程下该包名的所有信息：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Resolver</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Returns declarations with the given package name.</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> packageName the package name to look up.</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> A sequence of [KSDeclaration] with matching package name.</span></span><br><span class="line"><span class="comment">     * This will return declarations from both dependencies and source.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@KspExperimental</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">getDeclarationsFromPackage</span><span class="params">(packageName: <span class="type">String</span>)</span></span>: Sequence&lt;KSDeclaration&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以利用这一点，约定每个依赖的工程、jar和aar都把各自的服务、实现信息写到指定包名中，再通过这个接口一次性获取当前工程以及其依赖的工程、jar、aar的所有服务、实现信息，实现信息聚合，并将聚合结果写入到resources下；</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MetadataAggregateProcessor</span>(</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> environment: SymbolProcessingEnvironment</span><br><span class="line">) : SymbolProcessor &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">process</span><span class="params">(resolver: <span class="type">Resolver</span>)</span></span>: List&lt;KSAnnotated&gt; &#123;</span><br><span class="line">        <span class="keyword">val</span> aggregationInfo =</span><br><span class="line">            resolver.getDeclarationsFromPackage(AGGREGATION_PACKAGE_NAME).map &#123; ksDeclaration -&gt;</span><br><span class="line">                it.toAggregationInfo()</span><br><span class="line">            &#125;.fold(AggregationInfo.EMPTY) &#123; left, right -&gt;</span><br><span class="line">                left + right</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        environment.codeGenerator.createNewFile(</span><br><span class="line">            dependencies = Dependencies(</span><br><span class="line">                aggregating = <span class="literal">false</span>,</span><br><span class="line">                sources = ...</span><br><span class="line">            ),</span><br><span class="line">            packageName = <span class="string">&quot;&quot;</span>,  <span class="comment">// write to resources</span></span><br><span class="line">            fileName = <span class="string">&quot;aggregated&quot;</span>,</span><br><span class="line">            extensionName = <span class="string">&quot;json&quot;</span></span><br><span class="line">        ).bufferedWriter().use &#123;</span><br><span class="line">            it.write(gson.toJson(aggregationInfo))</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">data</span> <span class="keyword">class</span> <span class="title class_">AggregationInfo</span>(</span><br><span class="line">    <span class="keyword">val</span> mappings: List&lt;ServiceImplemetationMapping&gt; = listOf()</span><br><span class="line">) &#123;</span><br><span class="line">    <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="title">plus</span><span class="params">(that: <span class="type">AggregationInfo</span>)</span></span>: AggregationInfo &#123;</span><br><span class="line">        <span class="keyword">return</span> AggregationInfo(mappings = <span class="keyword">this</span>.mappings + that. mappings)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">data</span> <span class="keyword">class</span> <span class="title class_">ServiceImplemetationMapping</span>(</span><br><span class="line">    <span class="keyword">val</span> serviceName: String = <span class="string">&quot;&quot;</span>,</span><br><span class="line">    <span class="keyword">val</span> impls: List&lt;String&gt; = listOf()</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>KSP帮助我们实现单工程扫描和多工程信息聚合，总体工作流程如下图：</p>
+<p><img src="/multi-project-aggregation/multi-project-processor-aggregation.drawio.png"></p>
+<h2 id="自定义Gradle-Task实现插入代码"><a href="#自定义Gradle-Task实现插入代码" class="headerlink" title="自定义Gradle Task实现插入代码"></a>自定义Gradle Task实现插入代码</h2><p>有了所有服务和实现的信息，就可以考虑代码生成的逻辑了。我们可以自定义Gradle Task来完成插入服务、实现信息的逻辑。插入的代码可以是源码，也可以是字节码。但由于我们需要代码隔离，因此我们只能选择插入字节码。</p>
+<p>插入字节码又有两种方式：</p>
+<ol>
+<li>编辑现有的<code>*.class</code>文件；</li>
+<li>创建一个新的<code>*.class</code>文件；</li>
+</ol>
+<p>编辑现有的<code>*.class</code>文件，我们需要知道目标<code>*.class</code>文件存放在哪里，直接遍历工程目录不可取，可以考虑在compileKotlin（Java语言对应compileJavaWithJavac）执行完毕后，获取其输出文件然后挨个遍历搜索；找到后通过字节码操纵技术执行代码插入逻辑。</p>
+<p>创建新的<code>*.class</code>文件，我认为可以将存放service到impl映射的代码单独剥离出来，使用<code>compileOnly</code>的形式引入。通过使用<code>compileOnly</code>的形式引入，使之不参与编译流程，我们也就能在编译流程中自行生成字节码，再将产物汇入到编译流程，存在于最终产物中。</p>
+<p>为了简便实现，我选择了第二个方案：源码期提供占桩jar，编译期生成字节码文件，达到偷梁换柱的效果。</p>
+<h3 id="占桩Jar"><a href="#占桩Jar" class="headerlink" title="占桩Jar"></a>占桩Jar</h3><p>占桩Jar中提供一个容器存放service到impl的映射关系：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@file:JvmName</span>(<span class="string">&quot;ServiceRegistry&quot;</span>)</span><br><span class="line"><span class="keyword">package</span> com.spirytusz.spi.runtime</span><br><span class="line"></span><br><span class="line"><span class="keyword">typealias</span> ServiceAlias = String</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> sServicePool: Map&lt;Class&lt;*&gt;, Map&lt;ServiceAlias, Callable&lt;*&gt;&gt;&gt; = mapOf()</span><br></pre></td></tr></table></figure>
+
+<p>在runtime模块以compileOnly的形式引入：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// build.gradle (spi-runtime)</span></span><br><span class="line">dependencies &#123;</span><br><span class="line">    compileOnly project(<span class="string">&quot;:spi-runtime-stub&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>做到源码期能够直接访问：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.spirytusz.spi.runtime</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ServiceProvider</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">ofAll</span><span class="params">(clazz: <span class="type">Class</span>&lt;<span class="type">T</span>&gt;)</span></span>: List&lt;T&gt; &#123;</span><br><span class="line">        <span class="keyword">return</span> sServicePool[clazz]?.values()?.map &#123; </span><br><span class="line">            it.call() <span class="keyword">as</span> T </span><br><span class="line">        &#125; ?: emptyList()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="编译期生成代码"><a href="#编译期生成代码" class="headerlink" title="编译期生成代码"></a>编译期生成代码</h3><p>占桩代码实际上不参与编译，其作用仅仅只是为了通过编译，需要在编译期生成对应的代码。</p>
+<p>瞪眼法观察占桩代码，其对应的Java代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ServiceRegistry</span> &#123;</span><br><span class="line">    <span class="comment">// ①</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;Class&lt;?&gt;, Map&lt;String, Callable&lt;?&gt;&gt;&gt; sServicePool;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ②</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">ServiceRegistry</span><span class="params">()</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ③</span></span><br><span class="line">    <span class="keyword">public</span> Map&lt;Class&lt;?&gt;, Map&lt;String, Callable&lt;?&gt;&gt;&gt; getSServicePool() &#123;</span><br><span class="line">        <span class="keyword">return</span> sServicePool;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ④</span></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        sServicePool = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>①处就是存放服务-实现映射的字段；</li>
+<li>②处是编译器帮助我们生成的无参构造方法；</li>
+<li>③处是编译器帮助我们为public val的字段生成的getter方法；</li>
+<li>④处是为了初始化①处变量的静态代码块，后面可以用来插入服务-实现映射的代码；</li>
+</ul>
+<p>只要生成这四处代码就可以了。关键在于服务-实现映射代码的生成，举个例子，使用javap反编译出字节码：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">javap -c -v -s -l ServiceRegistry.class</span><br></pre></td></tr></table></figure>
+
+<p>Java代码与字节码的映射关系如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ServiceRegistry</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">// ldc                class com/spirytusz/spi/demo/api/ILocationService</span></span><br><span class="line">        <span class="comment">// astore_0</span></span><br><span class="line">        Class&lt;?&gt; var0 = ILocationService.class;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// new                class java/util/concurrent/ConcurrentHashMap</span></span><br><span class="line">        <span class="comment">// dup</span></span><br><span class="line">        <span class="comment">// invokespecial      Method java/util/concurrent/ConcurrentHashMap.&quot;&lt;init&gt;&quot;:()V  </span></span><br><span class="line">        <span class="comment">// astore_1</span></span><br><span class="line">        Map&lt;String, Callable&lt;?&gt;&gt; var1 = <span class="keyword">new</span> <span class="title class_">ConcurrentHashMap</span>&lt;&gt;();</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// aload_1</span></span><br><span class="line">        <span class="comment">// ldc                String coarse</span></span><br><span class="line">        <span class="comment">// new                class com/spirytusz/spi/demo/impl/CoarseLocationService_Create</span></span><br><span class="line">        <span class="comment">// dup</span></span><br><span class="line">        <span class="comment">// invokespecial      Method com/spirytusz/spi/demo/impl/CoarseLocationService_Create.&quot;&lt;init&gt;&quot;:()V  </span></span><br><span class="line">        <span class="comment">// invokeinterface    InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;</span></span><br><span class="line">        <span class="comment">// pop</span></span><br><span class="line">        var1.put(<span class="string">&quot;coarse&quot;</span>, <span class="keyword">new</span> <span class="title class_">CoarseLocationService_Create</span>());</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// aload_1</span></span><br><span class="line">        <span class="comment">// ldc                String fine</span></span><br><span class="line">        <span class="comment">// new                class com/spirytusz/spi/demo/impl/FineLocationService_Create</span></span><br><span class="line">        <span class="comment">// dup</span></span><br><span class="line">        <span class="comment">// invokespecial      Method com/spirytusz/spi/demo/impl/FineLocationService_Create.&quot;&lt;init&gt;&quot;:()V  </span></span><br><span class="line">        <span class="comment">// invokeinterface    InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;</span></span><br><span class="line">        <span class="comment">// pop</span></span><br><span class="line">        var1.put(<span class="string">&quot;fine&quot;</span>, <span class="keyword">new</span> <span class="title class_">FineLocationService_Create</span>());</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// aload_1</span></span><br><span class="line">        <span class="comment">// ldc                String fused</span></span><br><span class="line">        <span class="comment">// new                class com/spirytusz/spi/demo/impl/FusedLocationService_Create</span></span><br><span class="line">        <span class="comment">// dup</span></span><br><span class="line">        <span class="comment">// invokespecial      Method com/spirytusz/spi/demo/impl/FusedLocationService_Create.&quot;&lt;init&gt;&quot;:()V  </span></span><br><span class="line">        <span class="comment">// invokeinterface    InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;</span></span><br><span class="line">        <span class="comment">// pop</span></span><br><span class="line">        var1.put(<span class="string">&quot;fine&quot;</span>, <span class="keyword">new</span> <span class="title class_">FusedLocationService_Create</span>());</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// getstatic          Field sServicePool:Ljava/util/Map;</span></span><br><span class="line">        <span class="comment">// aload_0</span></span><br><span class="line">        <span class="comment">// aload_1</span></span><br><span class="line">        <span class="comment">// invokeinterface    InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;</span></span><br><span class="line">        <span class="comment">// pop</span></span><br><span class="line">        sServicePool.put(var0, var1);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// return</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用ASM框架对着字节码翻译即可完成生成字节码的逻辑。</p>
+<p>完成了字节码的生成逻辑，就可以考虑Task的输入输出了，定义一个task：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@CacheableTask</span></span><br><span class="line"><span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">MosesGenerateTask</span> : <span class="type">DefaultTask</span>() &#123;</span><br><span class="line">    <span class="meta">@get:InputFile</span>  <span class="comment">// mark as input</span></span><br><span class="line">    <span class="meta">@get:PathSensitive</span>(value = PathSensitivity.ABSOLUTE) <span class="comment">// specified path sensitive</span></span><br><span class="line">    <span class="keyword">abstract</span> <span class="keyword">val</span> inputMetadata: RegularFileProperty</span><br><span class="line"></span><br><span class="line">    <span class="meta">@get:OutputFile</span>  <span class="comment">// mark as output</span></span><br><span class="line">    <span class="keyword">abstract</span> <span class="keyword">val</span> outputClasspath: DirectoryProperty</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@TaskAction</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">generate</span><span class="params">()</span></span> &#123; ... &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输入即<code>inputMetadata</code>，是一个包含了服务实现映射关系的json文件；</p>
+<p>输出即<code>outputClasspath </code>，是生成字节码文件的所在目录；</p>
+<p>然后在配置阶段配置输入输出，以及依赖关系：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> outputClasspath = layout.buildDirectory.dir(<span class="string">&quot;intermediates/moses/<span class="variable">$variantName</span>&quot;</span>)</span><br><span class="line"><span class="keyword">val</span> variantNameFirstCharUppercase = variantName.replaceFirstChar &#123; it.uppercaseChar() &#125;</span><br><span class="line"><span class="keyword">val</span> mosesVariantTask = tasks.register(</span><br><span class="line">    <span class="string">&quot;generateMosesAggregationCode<span class="variable">$variantNameFirstCharUppercase</span>&quot;</span>,</span><br><span class="line">    MosesGenerateTask::<span class="keyword">class</span>.java</span><br><span class="line">) &#123;</span><br><span class="line">    <span class="comment">// 配置输入</span></span><br><span class="line">    it.inputMetadata.<span class="keyword">set</span>(inputMetadata)</span><br><span class="line">    <span class="comment">// 配置输出</span></span><br><span class="line">    it.outputClasspath.<span class="keyword">set</span>(outputClasspath)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 配置Task依赖，确保MosesGenerateTask必执行</span></span><br><span class="line">mosesVariantTask.dependsOn(tasks.named(<span class="string">&quot;ksp<span class="subst">$&#123;variantNameFirstCharUppercase&#125;</span>Kotlin&quot;</span>))</span><br><span class="line">tasks.named(<span class="string">&quot;dexBuilder<span class="variable">$variantNameFirstCharUppercase</span>&quot;</span>).dependsOn(mosesVariantTask)</span><br></pre></td></tr></table></figure>
+
+<h3 id="汇入编译流程"><a href="#汇入编译流程" class="headerlink" title="汇入编译流程"></a>汇入编译流程</h3><p>生成的<code>outputClasspath </code>是孤立的，合成dex文件的<code>DexArchiveBuilderTask</code>是不知道它的存在的。因此我们需要告诉<code>DexArchiveBuilderTask</code>我们生成代码，使得我们生成的代码能够参与合成dex的流程。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> outputClasspath = layout.buildDirectory.dir(<span class="string">&quot;intermediates/moses/<span class="variable">$variantName</span>&quot;</span>)</span><br><span class="line">...</span><br><span class="line">tasks.withType(DexArchiveBuilderTask::<span class="keyword">class</span>.java) &#123;</span><br><span class="line">    it.projectClasses.from(outputClasspath)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样<code>DexArchiveBuilderTask </code>就会将我们生成的字节码文件一并合成为dex文件。</p>
+<p>自此，我实现的SPI框架总算完成了。</p>
+<h1 id="与Gradle缓存"><a href="#与Gradle缓存" class="headerlink" title="与Gradle缓存"></a>与Gradle缓存</h1><p>所以，这与Gradle缓存有何联系？这里的缓存分为两种：</p>
+<ol>
+<li>KSP自身利用Gradle缓存机制实现的缓存；</li>
+<li>自定义Task的缓存；</li>
+</ol>
+<h2 id="KSP的缓存"><a href="#KSP的缓存" class="headerlink" title="KSP的缓存"></a>KSP的缓存</h2><p>KSP的增量扫描逻辑由缓存来保证。Google也在<a href="https://kotlinlang.org/docs/ksp-incremental.html#how-it-is-implemented">Incremental processing</a>描述了这块逻辑。</p>
+<p>KSP会根据产物的类型：Aggregating和Isolating来决定是否重新处理。我实现的SPI框架就分别使用到了这两种产物类型：</p>
+<ul>
+<li><p><strong>Aggregating</strong></p>
+<blockquote>
+<p>An aggregating output can potentially be affected by any input changes, except removing files that don’t affect other files. This means that any input change results in a rebuild of all aggregating outputs, which in turn means reprocessing of all corresponding registered, new, and modified source files.</p>
+</blockquote>
+<p><code>MetadataCollectProcessor</code>的产物就是aggregated的。通过指定产物为aggregated的，使得在指定的服务和实现代码发生变化时，KSP能够将变化告诉<code>MetadataCollectProcessor </code>，我们才能重新处理，扫描出正确的服务和实现。</p>
+<p>例如，当代码修改没有触及到服务和实现类时，KSP并不会让<code>MetadataCollectProcessor </code>重新处理。一旦修改触及到了服务或实现，KSP就会将所有的服务和实现交给<code>MetadataCollectProcessor </code>，<code>MetadataCollectProcessor </code>便会重新处理并生成相应的代码。</p>
+</li>
+<li><p><strong>Isolating</strong></p>
+<blockquote>
+<p>An isolating output depends only on its specified sources. Changes to other sources do not affect an isolating output. Note that unlike Gradle annotation processing, you can define multiple source files for a given output.</p>
+</blockquote>
+<p><code>MetadataAggregateProcessor</code>就是isolating的，这样KSP就知道<code>MetadataAggregateProcessor </code>指关注指定包名的代码，只有这个包名下的代码发生了变化，KSP才会通知<code>MetadataAggregateProcessor </code>重新处理。</p>
+<p>例如，当<code>MetadataCollectProcessor </code>的产物没有变化时，KSP就不会重新执行<code>MetadataAggregateProcessor </code>；否则，一旦某个工程的<code>MetadataCollectProcessor </code>的产物发生改变，就会触发<code>MetadataAggregateProcessor </code>的重新处理。</p>
+</li>
+</ul>
+<h2 id="自定义Task缓存"><a href="#自定义Task缓存" class="headerlink" title="自定义Task缓存"></a>自定义Task缓存</h2><p>自定义Task缓存是基于Gradle缓存的，实现方式是：</p>
+<ol>
+<li>通过<code>@CacheableTask</code>将Task指定为CacheableTask；</li>
+<li>通过<code>@Input</code>和<code>@PathSensitive</code>告诉Gradle输出的文件是什么；</li>
+</ol>
+<p>通过上面两个步骤，Gradle就能够帮我们维护缓存。经过KSP处理器处理后，会生成一个聚合了服务&amp;实现信息的json文件。</p>
+<p>如果这个json没有变化时，Gradle就不会执行这个自定义Task，并且能在输出中观察到这个task的状态是<code>UP-TO-DATE</code>的；</p>
+<p>如果这个json发生了变化，Gradle则会重新触发执行这个task。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在扫描逻辑上，我借助了KSP的增量扫描机制来进行服务&amp;实现的收集，并在主工程中聚合起来，生成一个带有所有服务&amp;实现的json文件；</p>
+<p>在代码生成逻辑上，我自定义了一个Gradle Task，以执行字节码生成的逻辑；</p>
+<p>在缓存管理上，我借助了Gradle缓存机制，将自定义Gradle Task标记为Cacheable的，当json文件没有改变时，Gradle会跳过执行该Task的Action；</p>
+<p>最后，将输出的字节码文件输入到<code>DexArchiveBuilderTask </code>中，使得生成的字节码能够参与Dex文件的合成，产物dex文件中才会带上我生成的字节码。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/kotlin-coroutine-context/" data-toggle="tooltip" data-placement="top" title="浅谈Kotlin协程(1)">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/android-view-draw/" data-toggle="tooltip" data-placement="top" title="Android View体系 - 绘制篇">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/multi-project-aggregation/";
+    var disqus_url = "https://spirytusz.co/multi-project-aggregation/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

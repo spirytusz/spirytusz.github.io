@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          浅谈Kotlin协程(3) - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/kotlin-coroutine-nonblocking-suspend/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.webp')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Kotlin" title="Kotlin">Kotlin</a>
+                        
+                          <a class="tag" href="/tags/#Coroutine" title="Coroutine">Coroutine</a>
+                        
+                    </div>
+                    <h1>浅谈Kotlin协程(3)</h1>
+                    <h2 class="subheading">非阻塞式挂起与恢复</h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2022-09-04
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在学习Kotlin协程的过程中，<strong>非阻塞式挂起</strong>这个概念一直困扰着我。挂起是什么？又是怎么个非阻塞式法？挂起后又如何恢复？这是《深入理解Kotlin协程》的读书笔记，记录我对<strong>非阻塞式挂起</strong>和<strong>恢复</strong>的一些理解。</p>
+<h1 id="挂起函数"><a href="#挂起函数" class="headerlink" title="挂起函数"></a>挂起函数</h1><p>上文<a href="../kotlin-coroutine-launch">浅谈Kotlin协程(2)——协程的启动和执行</a>中，我们已经知道协程体代码都被编译器编译在了<code>invokeSuspend</code>方法中。如果涉及到普通函数的调用，编译出来的代码与源码并无二致。那如果调用的是挂起函数呢？</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">test</span><span class="params">()</span></span> &#123;</span><br><span class="line">    GlobalScope.launch &#123;</span><br><span class="line">        suspendableFun()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">suspendableFun</span><span class="params">()</span></span> &#123;</span><br><span class="line">    println(<span class="string">&quot;Hello Kotlin Coroutine&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>反编译看看：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> Object <span class="title function_">invokeSuspend</span><span class="params">(<span class="meta">@NotNull</span> Object $result)</span> &#123;</span><br><span class="line">    <span class="comment">// ①</span></span><br><span class="line">    <span class="type">Object</span> <span class="variable">var2</span> <span class="operator">=</span> IntrinsicsKt.getCOROUTINE_SUSPENDED();</span><br><span class="line">    <span class="keyword">switch</span>(<span class="built_in">this</span>.label) &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">        ResultKt.throwOnFailure($result);</span><br><span class="line">        <span class="comment">// ②</span></span><br><span class="line">        <span class="type">CoroutineSuspendableTest</span> <span class="variable">var10000</span> <span class="operator">=</span> CoroutineSuspendableTest.<span class="built_in">this</span>;</span><br><span class="line">        <span class="built_in">this</span>.label = <span class="number">1</span>;</span><br><span class="line">        <span class="comment">// ③</span></span><br><span class="line">        <span class="keyword">if</span> (var10000.suspendableFun(<span class="built_in">this</span>) == var2) &#123;</span><br><span class="line">            <span class="keyword">return</span> var2;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">        ResultKt.throwOnFailure($result);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;call to &#x27;resume&#x27; before &#x27;invoke&#x27; with coroutine&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ④</span></span><br><span class="line">    <span class="keyword">return</span> Unit.INSTANCE;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Object <span class="title function_">suspendableFun</span><span class="params">(Continuation $completion)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">var2</span> <span class="operator">=</span> <span class="string">&quot;Hello Kotlin Coroutine&quot;</span>;</span><br><span class="line">    System.out.println(var2);</span><br><span class="line">    <span class="keyword">return</span> Unit.INSTANCE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>阅读代码发现了以下几个疑点：</p>
+<ol>
+<li>调用流程是①-&gt;②-&gt;③-&gt;④，是同步调用，没有涉及到任何与挂起有关的逻辑；</li>
+<li>挂起函数<code>suspendableFun</code>的方法签名从<code>() -&gt; Unit</code>变成了<code>(Continuation) -&gt; Any?</code>；</li>
+<li><code>invokeSuspend</code>多了<code>switch-case</code>结构；</li>
+</ol>
+<p>我们一起来分析一下。</p>
+<h2 id="挂起函数不一定会挂起"><a href="#挂起函数不一定会挂起" class="headerlink" title="挂起函数不一定会挂起"></a>挂起函数不一定会挂起</h2><p>事实上<code>suspendableFun</code>永远不会被挂起，这点IDE已经有了提示：</p>
+<p><img src="/kotlin-coroutine-nonblocking-suspend/redundant_suspend.png"></p>
+<p>挂起的充要条件是<strong>调用栈改变</strong>。来一个挂起函数一定会被挂起的例子：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">willSuspendFunc</span><span class="params">()</span></span>: String = suspendCoroutine&lt;String&gt; &#123; </span><br><span class="line">    Thread &#123;</span><br><span class="line">        it.resume(<span class="string">&quot;Hello Kotlin Coroutine!&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个方法有两个关键：</p>
+<ol>
+<li>调用了<code>suspendCoroutine</code>方法；</li>
+<li>返回值是String，但是并没有看到显式返回String的代码；</li>
+</ol>
+<p>跟进<code>suspendCoroutine</code>的代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">suspend</span> <span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">suspendCoroutine</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">crossinline</span> block: (<span class="type">Continuation</span>&lt;<span class="type">T</span>&gt;) -&gt; <span class="type">Unit</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>: T = suspendCoroutineUninterceptedOrReturn &#123; c: Continuation&lt;T&gt; -&gt;</span><br><span class="line">    <span class="keyword">val</span> safe = SafeContinuation(c.intercepted())</span><br><span class="line">    block(safe)</span><br><span class="line">    safe.getOrThrow()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>suspendCoroutineUninterceptedOrReturn</code>的作用就是将编译器生成的<code>Continuation $completion</code>参数通过lambda参数暴露给给我们，所以这里的<code>c: Continuation&lt;T&gt;</code>事实上就是被<code>DispatchedContinuation</code>包装了的<code>BaseContinuationImpl</code>。我们在<code>willSuspendFunc</code>方法拿到的continuation，它的结构如图所示：<br><img src="/kotlin-coroutine-nonblocking-suspend/safe_continuation_wrap.drawio.png"></p>
+<p>执行完传入<code>suspendCoroutine</code>的lambda表达式后，重点在于<code>SafeContinuation</code>的<code>getOrThrow</code>方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title class_">CoroutineSingletons</span> &#123; COROUTINE_SUSPENDED, UNDECIDED, RESUMED &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SafeContinuation</span>&lt;<span class="type">in T</span>&gt; : <span class="type">Continuation</span>&lt;<span class="type">T</span>&gt; &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> RESULT = AtomicReference&lt;Any?&gt;(UNDECIDED)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">getOrThrow</span><span class="params">()</span></span>: Any? &#123;</span><br><span class="line">        <span class="keyword">var</span> result = <span class="keyword">this</span>.RESULT <span class="comment">// atomic read</span></span><br><span class="line">        <span class="keyword">if</span> (result === UNDECIDED) &#123;</span><br><span class="line">            <span class="keyword">if</span> (RESULT.compareAndSet(<span class="keyword">this</span>, UNDECIDED, COROUTINE_SUSPENDED)) &#123;</span><br><span class="line">                <span class="keyword">return</span> COROUTINE_SUSPENDED</span><br><span class="line">            &#125;</span><br><span class="line">            result = <span class="keyword">this</span>.result</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;)</span></span> &#123;</span><br><span class="line">        <span class="keyword">val</span> cur = <span class="keyword">this</span>.RESULT.<span class="keyword">get</span>()</span><br><span class="line">        <span class="keyword">when</span> &#123;</span><br><span class="line">            cur === COROUTINE_SUSPENDED -&gt; <span class="keyword">if</span> (RESULT.compareAndSet(<span class="keyword">this</span>, COROUTINE_SUSPENDED, RESUMED)) &#123;</span><br><span class="line">                delegate.resumeWith(result)</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>RESULT</code>的类型是<code>Any?</code>，用于存放当前协程体的状态和挂起函数的执行结果，当存放状态时，会有三种情况：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>含义</th>
+<th>如何扭转至此状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UNDECIDED</td>
+<td>初始状态</td>
+<td>创建<code>SafeContinuation</code></td>
+</tr>
+<tr>
+<td>COROUTINE_SUSPENDED</td>
+<td>挂起状态</td>
+<td>执行lambda表达式的调用栈下，没有调用<code>resumeWith</code></td>
+</tr>
+<tr>
+<td>RESUMED</td>
+<td>恢复状态</td>
+<td>执行<code>resumeWith</code></td>
+</tr>
+</tbody></table>
+<p>由于在执行lambda表达式的调用栈下，并没有执行<code>resumeWith</code>方法，所以此时的<code>RESULT</code>会从<code>UNDECIDED</code>扭转为<code>COROUTINE_SUSPENDED</code>。显然这里<code>getOrThrow</code>方法的返回值是<code>COROUTINE_SUSPENDED</code>，接下来如何执行，源码并没有告诉我们答案，考虑到编译器会帮我们生成一些代码，我们不妨反编译成java代码试试：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Object <span class="title function_">willSuspendFuc</span><span class="params">(</span></span><br><span class="line"><span class="params">    Continuation&lt;? <span class="built_in">super</span> String&gt; paramContinuation</span></span><br><span class="line"><span class="params">)</span> &#123;</span><br><span class="line">    <span class="type">SafeContinuation</span> <span class="variable">safeContinuation</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SafeContinuation</span>(</span><br><span class="line">        IntrinsicsKt.intercepted(paramContinuation)</span><br><span class="line">    );</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">Thread</span>(</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">CoroutineSuspendableTest$suspendableFun$2$1</span>(</span><br><span class="line">            (Continuation&lt;? <span class="built_in">super</span> String&gt;)safeContinuation</span><br><span class="line">        )</span><br><span class="line">    );</span><br><span class="line">    <span class="comment">// ②</span></span><br><span class="line">    <span class="type">Object</span> <span class="variable">object</span> <span class="operator">=</span> safeContinuation.getOrThrow();</span><br><span class="line">    <span class="keyword">return</span> object;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> Object <span class="title function_">invokeSuspend</span><span class="params">(Object param1Object)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// ①</span></span><br><span class="line">    param1Object = param1Object.willSuspendFuc(continuation);</span><br><span class="line">    <span class="comment">// ③</span></span><br><span class="line">    <span class="keyword">if</span> (param1Object == IntrinsicsKt.getCOROUTINE_SUSPENDED())</span><br><span class="line">        <span class="keyword">return</span> IntrinsicsKt.getCOROUTINE_SUSPENDED(); </span><br><span class="line">    <span class="keyword">return</span> Unit.INSTANCE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>①处调用了<code>willSuspendFuc</code>方法，并在②返回了<code>COROUTINE_SUSPEND</code>，于是乎在③处便也返回了<code>COROUTINE_SUSPEND</code>。③处在源码中的表现，相当于代码的执行停在了挂起方法<code>willSuspendFunc</code>处。只有在另一个线程起来，resume了Continuation，代码才会继续执行。</p>
+<p>当另一个线程起来的时候就会调用<code>Continuation</code>的<code>resumeWith</code>方法。此时的<code>Continuation</code>结构如图所示（与上图一模一样）：<br><img src="/kotlin-coroutine-nonblocking-suspend/safe_continuation_wrap.drawio.png"></p>
+<p>其调用链如同剥洋葱一样，从外到内按顺序调用<code>Continuation</code>的<code>resumeWith</code>方法。先来看看<code>SafeContinuation</code>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SafeContinuation</span>&lt;<span class="type">in T</span>&gt; : <span class="type">Continuation</span>&lt;<span class="type">T</span>&gt; &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> RESULT = AtomicReference&lt;Any?&gt;(UNDECIDED)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;)</span></span> &#123;</span><br><span class="line">        <span class="keyword">val</span> cur = <span class="keyword">this</span>.RESULT.<span class="keyword">get</span>()</span><br><span class="line">        <span class="keyword">when</span> &#123;</span><br><span class="line">            cur === COROUTINE_SUSPENDED -&gt; <span class="keyword">if</span> (RESULT.compareAndSet(<span class="keyword">this</span>, COROUTINE_SUSPENDED, RESUMED)) &#123;</span><br><span class="line">                delegate.resumeWith(result)</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于当前的状态已经是<code>COROUTINE_SUSPENDED</code>，所以会直接调用内层<code>Continuation</code>的<code>resumeWith</code>方法。内层是<code>DispatchedContinuation</code>，会帮我们切换到调度器指定的线程中，而后在这个线程内，调用<code>BaseContinuationImpl</code>的<code>resumeWith</code>方法。</p>
+<p>上篇文章<a href="../kotlin-coroutine-launch">浅谈Kotlin协程(2)——协程的启动和执行</a>中，我们已经知道<code>BaseContinuationImpl</code>的<code>resumeWith</code>方法会调用其<code>invokeSuspend</code>方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> Object <span class="title function_">invokeSuspend</span><span class="params">(Object param1Object)</span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> (<span class="built_in">this</span>.label) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">            <span class="comment">// ②</span></span><br><span class="line">            ResultKt.throwOnFailure(param1Object);</span><br><span class="line">            System.out.println((String)param1Object);</span><br><span class="line">            <span class="keyword">return</span> Unit.INSTANCE;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;call to &#x27;resume&#x27; before &#x27;invoke&#x27; with coroutine&quot;</span>);</span><br><span class="line">    &#125; </span><br><span class="line">    ResultKt.throwOnFailure(param1Object);</span><br><span class="line">    param1Object = CoroutineSuspendableTest.<span class="built_in">this</span>;</span><br><span class="line">    <span class="type">Continuation</span> <span class="variable">continuation</span> <span class="operator">=</span> (Continuation)<span class="built_in">this</span>;</span><br><span class="line">    <span class="comment">// ①</span></span><br><span class="line">    <span class="built_in">this</span>.label = <span class="number">1</span>;</span><br><span class="line">    param1Object = param1Object.suspendableFun(continuation);</span><br><span class="line">    <span class="keyword">if</span> (param1Object == IntrinsicsKt.getCOROUTINE_SUSPENDED())</span><br><span class="line">        <span class="keyword">return</span> IntrinsicsKt.getCOROUTINE_SUSPENDED(); </span><br><span class="line">    <span class="keyword">return</span> Unit.INSTANCE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为在挂起前label被置为了1（①处代码），所以协程恢复时会走case 1，打印出字符串。自从挂起函数<code>withSuspendFunc</code>执行完毕，走完<strong>执行-挂起-恢复</strong>完整的流程。</p>
+<p>完整的<strong>执行-挂起-恢复</strong>如图所示：<br><img src="/kotlin-coroutine-nonblocking-suspend/suspend_func_exec_suspend_resume.drawio.png"></p>
+<p>经过分析和代码跟进后，我们可以发现，一个挂起函数的<strong>执行-挂起-恢复</strong>流程事实上是开发者、Kotlin协程标准库以及kotlin编译器三者打配合共同完成的。</p>
+<ul>
+<li><p>对于开发者</p>
+<p>从源码的角度，对于开发者只负责①和⑫，对开发者而言这是一个同步过程；</p>
+</li>
+<li><p>对于Kotlin协程标准库</p>
+<p>负责兜住挂起状态，不将挂起状态暴露给开发者，图中的③~⑩；</p>
+</li>
+<li><p>对于kotlin编译器</p>
+<p>负责<code>invokeSuspend</code>的生成，即处理挂起状态和协程状态机的状态扭转，图中的②~③、⑦和⑪；</p>
+</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>挂起函数虽然叫做挂起函数，但是它不一定会被挂起。如上两个例子，两者最根本的区别就是前者是同步调用——在挂起方法内同步返回，后者是异步调用，<strong>调用栈</strong>改变了。因此，挂起函数是否会被挂起，取决于调用栈是否改变。</p>
+<p>另外，虽然从源码的角度来看，调用挂起函数如同同步调用一般，但经过编译器的处理后，本质上还是异步回调。异步转同步的桥梁即为<code>kotlin-coroutine-core</code>标准库的逻辑，它帮我们兜住挂起的状态，通过<code>Continuation</code>保存了挂起前的现场，在协程恢复时能够恢复现场，从而继续执行。这也解释了为何挂起函数在经过编译后，方法签名改变了：</p>
+<ul>
+<li>增加<code>Continuation</code>参数是为了能和协程体关联起来，以便在挂起恢复后能够再次调用<code>invokeSuspend</code>方法；</li>
+<li>返回值变成<code>Any?</code>是为了支持返回挂起状态，以便能够挂起。</li>
+</ul>
+<h1 id="协程状态机"><a href="#协程状态机" class="headerlink" title="协程状态机"></a>协程状态机</h1><p>我们可以在协程体内同步调用多个挂起方法。这就涉及到的多个挂起函数状态维护的问题，kotlin协程的设计者设计出了一个协程状态机，巧妙的解决了这个问题。</p>
+<p>阅读经过编译器生成的<code>invokeSuspend</code>方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">int</span> <span class="variable">label</span> <span class="operator">=</span> <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">invokeSuspend</span><span class="params">(Object param)</span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> (label) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>: &#123;</span><br><span class="line">            label = <span class="number">1</span>;</span><br><span class="line">            <span class="type">Object</span> <span class="variable">ret</span> <span class="operator">=</span> suspendFunc1(<span class="built_in">this</span>);</span><br><span class="line">            <span class="keyword">if</span> (ret == COROUTINE_SUSPENDED) &#123;</span><br><span class="line">                <span class="keyword">return</span> COROUTINE_SUSPENDED;</span><br><span class="line">            &#125;</span><br><span class="line">            param = ret;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>: &#123;</span><br><span class="line">            System.out.println((String)param);</span><br><span class="line"></span><br><span class="line">            label = <span class="number">2</span>;</span><br><span class="line">            <span class="type">Object</span> <span class="variable">ret</span> <span class="operator">=</span> suspendFunc2(<span class="built_in">this</span>);</span><br><span class="line">            <span class="keyword">if</span> (ret == COROUTINE_SUSPENDED) &#123;</span><br><span class="line">                <span class="keyword">return</span> COROUTINE_SUSPENDED;</span><br><span class="line">            &#125;</span><br><span class="line">            param = ret;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">2</span>: &#123;</span><br><span class="line">            System.out.println((String)param);</span><br><span class="line"></span><br><span class="line">            label = <span class="number">3</span>;</span><br><span class="line">            <span class="type">Object</span> <span class="variable">ret</span> <span class="operator">=</span> suspendFunc3(<span class="built_in">this</span>);</span><br><span class="line">            <span class="keyword">if</span> (ret == COROUTINE_SUSPENDED) &#123;</span><br><span class="line">                <span class="keyword">return</span> COROUTINE_SUSPENDED;</span><br><span class="line">            &#125;</span><br><span class="line">            param = ret;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">3</span>: &#123;</span><br><span class="line">            System.out.println((String)param);</span><br><span class="line"></span><br><span class="line">            label = <span class="number">4</span>;</span><br><span class="line">            <span class="type">Object</span> <span class="variable">ret</span> <span class="operator">=</span> suspendFunc4(<span class="built_in">this</span>);</span><br><span class="line">            <span class="keyword">if</span> (ret == COROUTINE_SUSPENDED) &#123;</span><br><span class="line">                <span class="keyword">return</span> COROUTINE_SUSPENDED;</span><br><span class="line">            &#125;</span><br><span class="line">            param = ret;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">4</span>: &#123;</span><br><span class="line">            System.out.println((String)param);</span><br><span class="line">            <span class="keyword">return</span> Unit.INSTANCE;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">default</span>: <span class="keyword">throw</span> IllegalStateException(<span class="string">&quot;&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面代码执行的顺序如图：<br><img src="/kotlin-coroutine-nonblocking-suspend/suspend_func_sequence_exec.drawio.png"></p>
+<ol>
+<li>每一次调用<code>invokeSuspend</code>都会扭转一次状态，即label++；</li>
+<li>对于每个状态（case），都会调用挂起函数；</li>
+<li>如果挂起函数返回了<code>COROUTINE_SUSPENDED</code>，<code>invokeSuspend</code>则会直接返回，当前的调用栈结束，让出当前线程，协程体的执行流程停留于此，直至恢复时再次调用<code>invokeSuspend</code>；</li>
+<li>如果协程体的某一个挂起函数直接返回结果，则会接着执行下一个case，然后回到3处，直至协程体结束。</li>
+</ol>
+<p>简而言之，Kotlin协程的设计者把每个挂起函数都拆分成了一个状态：</p>
+<p>如果这个挂起函数没有被挂起，则利用switch-case的特性，执行下一个挂起函数；</p>
+<p>如果这个挂起函数被挂起了，就让出当前线程，在恢复的时候，再次调用<code>invokeSuspend</code>，就自然而然的走到了下一个状态，去执行下一个挂起函数。</p>
+<p>Kotlin协程状态机，本质就是switch-case + label。</p>
+<h1 id="非阻塞式挂起与恢复"><a href="#非阻塞式挂起与恢复" class="headerlink" title="非阻塞式挂起与恢复"></a>非阻塞式挂起与恢复</h1><p>经过上文分析，如何非阻塞式挂起与恢复的答案便呼之欲出了。</p>
+<p>所谓挂起，本质就是<code>invokeSuspend</code>返回<code>COROUTINE_SUSPENDED</code>，效果上就是调用栈结束，协程体的执行停留在了挂起点，让出当前线程；因为当前线程空闲了，没有停在那里一直等协程体恢复，所以挂起才是非阻塞式的。</p>
+<p>既然挂起时让出了当前线程，必然需要有一个对象能够保存挂起点的现场（当前的调用栈走到哪里），以便后续恢复的时候能够继续执行协程体。而这个对象就是<code>Continuation</code>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Continuation</span>&lt;<span class="type">in T</span>&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">val</span> context: CoroutineContext</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;)</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>协程恢复的发起方调用<code>resumeWith</code>后，开始剥洋葱式的层层执行<code>Continuation</code>，最终走到了<code>BaseContinuationImpl</code>的<code>resumeWith</code>方法，而<code>BaseContinuationImpl</code>的<code>resumeWith</code>又会调用<code>invokeSuspend</code>方法，继续执行挂起点之后的代码，直至下一个挂起点或协程体结束。</p>
+<p>那么问题就是这个<code>Continuation</code>从哪来了。这个<code>Continuation</code>来源于挂起函数的参数列表，挂起函数参数列表的<code>Continuation</code>就是<code>BaseContinuationImpl</code>，或者是被包装过的<code>BaseContinuationImpl</code>。</p>
+<p>千言万言，一个协程体的启动和结束，可以简化成下面的代码，：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">GlobalScope.launch(<span class="keyword">object</span>: BaseContinuationImpl() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> label = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">init</span> &#123;</span><br><span class="line">        invokeSuspend(<span class="built_in">Unit</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">internal</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">invokeSuspend</span><span class="params">(param: <span class="type">Any</span>)</span></span>: Any &#123;</span><br><span class="line">        <span class="keyword">if</span> (label == <span class="number">0</span>) &#123;</span><br><span class="line">            label = <span class="number">1</span></span><br><span class="line">            <span class="keyword">val</span> ret = suspendFunc1(<span class="keyword">this</span>)</span><br><span class="line">            <span class="keyword">if</span> (ret == 挂起) &#123;</span><br><span class="line">                <span class="keyword">return</span> 挂起</span><br><span class="line">            &#125;</span><br><span class="line">            param = ret</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (label == <span class="number">1</span>) &#123;</span><br><span class="line">            println(param)</span><br><span class="line">            label = <span class="number">2</span></span><br><span class="line">            <span class="keyword">val</span> ret = suspendFunc2(<span class="keyword">this</span>)</span><br><span class="line">            <span class="keyword">if</span> (ret == 挂起) &#123;</span><br><span class="line">                <span class="keyword">return</span> 挂起</span><br><span class="line">            &#125;</span><br><span class="line">            param = ret</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        println(param)</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">Unit</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">Any</span>&gt;)</span></span> &#123;</span><br><span class="line">        invokeSuspend(result)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h1 id="协程的本质"><a href="#协程的本质" class="headerlink" title="协程的本质"></a>协程的本质</h1><p>分析到这里，我对Kotlin协程的本质有了一个大致认识。</p>
+<p>本质上来说，Kotlin协程给我们构造了这么一个世界：在这个世界（协程体）中，普通函数都会被同步调用，挂起函数同样也会被同步调用。然而，与普通函数不同的是，挂起函数会被编译器插入一个<code>Continuation</code>，它代表一个回调，允许挂起函数切换调用栈后在另一个调用栈结束时，通过回调再给我们<strong>切回来</strong>，以达到继续执行协程体的目的。</p>
+<p>所谓调用栈切换，既可以是基于事件循环，如Android平台的<code>Handler.post</code>，以及Swing平台的<code>invokeLater</code>，也可以是基于线程池的<code>execute</code>或<code>submit</code>。切到其他调用栈后，当前调用栈结束，及时让出当前线程，才能够更加充分的榨取CPU资源。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>所谓挂起，本质就是调用栈的切换。调用栈切换后，当前调用栈结束，线程转为空闲状态，而不是忙等协程恢复，所以才谓之为非阻塞式。</p>
+<p>恢复的本质即为回调，通过编译期插入一个回调<code>Continuation</code>给挂起函数，使得挂起函数才切换调用栈后，在另个调用栈调用该回调，从而回到挂起点，以继续执行代码。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                    
+                        <li class="next">
+                            <a href="/kotlin-coroutine-exception/" data-toggle="tooltip" data-placement="top" title="浅谈Kotlin协程(4)">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/kotlin-coroutine-nonblocking-suspend/";
+    var disqus_url = "https://spirytusz.co/kotlin-coroutine-nonblocking-suspend/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

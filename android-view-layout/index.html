@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          Android View体系 - 布局篇 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/android-view-layout/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.webp')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                        
+                    </div>
+                    <h1>Android View体系 - 布局篇</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2022-04-05
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在上篇文章<a href="android-view-measure/">Android View体系 - 测量篇</a>中，我们知道：每个<code>View</code>都会接收来自父<code>View</code>的<code>MeasureSpec</code>来进行测量，在确保自身能够独立完成测量逻辑的同时，也能向下推导，促使其子<code>View</code>的测量。</p>
+<p>与测量流程同为<code>View</code>三大流程的布局流程，是如何独立完成自身的布局流程，又能向下推导，促使孩子节点的布局的？本文将围绕着<code>View</code>布局流程的源码，尝试探索<code>View</code>的布局流程。</p>
+<h1 id="View的布局"><a href="#View的布局" class="headerlink" title="View的布局"></a>View的布局</h1><p>一棵<code>View</code>树的布局起源于<code>ViewRootImpl</code>的performTranversals方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performTraversals</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    performLayout(lp, mWidth, mHeight);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在performTraversals内部会调用performLayout方法，从根<code>View</code>开始测量：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performLayout</span><span class="params">(WindowMa</span></span><br><span class="line"><span class="params">        <span class="type">int</span> desiredWindowHeight)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    mInLayout = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">View</span> <span class="variable">host</span> <span class="operator">=</span> mView;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        host.layout(<span class="number">0</span>, <span class="number">0</span>, host.getMeasuredWidth(), host.getMeasuredHeight());</span><br><span class="line">        mInLayout = <span class="literal">false</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 处理布局流程中requestLayout</span></span><br><span class="line">        ArrayList&lt;View&gt; validLayoutRequesters = getValidLayoutRequesters(</span><br><span class="line">                mLayoutRequesters,</span><br><span class="line">                <span class="literal">false</span></span><br><span class="line">        );</span><br><span class="line">        ...</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在performLayout内部，逻辑大致可以分为两块：</p>
+<ol>
+<li>执行根<code>View</code>的layout方法开始布局；</li>
+<li>处理在布局过程中，当前<code>View</code>树的所有requestLayout请求；</li>
+</ol>
+<p>第2块不是主流程，主要来看第1块：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">layout</span><span class="params">(<span class="type">int</span> l, <span class="type">int</span> t, <span class="type">int</span> r, <span class="type">int</span> b)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">changed</span> <span class="operator">=</span> isLayoutModeOptical(mParent) ?</span><br><span class="line">            setOpticalFrame(l, t, r, b) : setFrame(l, t, r, b);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (changed || (mPrivateFlags &amp; PFLAG_LAYOUT_REQUIRED) == PFLAG_LAYOUT_REQUIRED) &#123;</span><br><span class="line">        onLayout(changed, l, t, r, b);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在<code>View</code>的layout方法中，主要的逻辑分为两块：</p>
+<ol>
+<li>setFrame - 为当前<code>View</code>设置布局的位置</li>
+<li>onLayout - 为当前<code>View</code>的子<code>View</code>布局</li>
+</ol>
+<h2 id="setFrame"><a href="#setFrame" class="headerlink" title="setFrame"></a>setFrame</h2><p>先看看<code>View</code>的setFrame方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">setFrame</span><span class="params">(<span class="type">int</span> left, <span class="type">int</span> top, <span class="type">int</span> right, <span class="type">int</span> bottom)</span> &#123;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">changed</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (mLeft != left || mRight != right || mTop != top || mBottom != bottom) &#123;</span><br><span class="line">        ...</span><br><span class="line">        mLeft = left;</span><br><span class="line">        mTop = top;</span><br><span class="line">        mRight = right;</span><br><span class="line">        mBottom = bottom;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> changed;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>setFrame方法内部的逻辑相对较为简单，内部逻辑会与上次设置的left、top、right、bottom进行比对，如果发生了改变，就会设置新值，否则啥也不干。</p>
+<h2 id="onLayout"><a href="#onLayout" class="headerlink" title="onLayout"></a>onLayout</h2><p>再来看看<code>View</code>的onLayout方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onLayout</span><span class="params">(<span class="type">boolean</span> changed, <span class="type">int</span> left, <span class="type">int</span> top, <span class="type">int</span> right, <span class="type">int</span> bottom)</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到<code>View</code>的onLayout是一个空实现。这也可以理解，因为onLayout是用来布局子<code>View</code>的，一个<code>View</code>不一定会有子<code>View</code>，<code>ViewGroup</code>才有可能有。</p>
+<h1 id="ViewGroup的布局"><a href="#ViewGroup的布局" class="headerlink" title="ViewGroup的布局"></a>ViewGroup的布局</h1><p><code>ViewGroup</code>也是<code>View</code>，不同的是，它能够承载其他<code>View</code>。<code>ViewGroup</code>布局的入口也是layout方法，它重写了（也是唯一一个重写layout的<code>View</code>子类）layout方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewGroup.java </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">layout</span><span class="params">(<span class="type">int</span> l, <span class="type">int</span> t, <span class="type">int</span> r, <span class="type">int</span> b)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!mSuppressLayout &amp;&amp; (mTransition == <span class="literal">null</span> || !mTransition.isChangingLayout())) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mTransition != <span class="literal">null</span>) &#123;</span><br><span class="line">            mTransition.layoutChange(<span class="built_in">this</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">super</span>.layout(l, t, r, b);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// record the fact that we noop&#x27;d it; request layout when transition finishes</span></span><br><span class="line">        mLayoutCalledWhileSuppressed = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码逻辑可以看到，如果一个<code>ViewGroup</code>没有通过suppressLayout方法来禁用布局，且动画没有在改变布局的位置时，就会调用超类<code>View</code>的layout方法，因此所做的逻辑大致与其超类<code>View</code>的基本一致。</p>
+<h2 id="onLayout-1"><a href="#onLayout-1" class="headerlink" title="onLayout"></a>onLayout</h2><p><code>ViewGroup</code>的layout方法逻辑与<code>View</code>的基本一致，<code>View</code>的layout方法有两个关键的方法：setFrame和onLayout。setFrame方法<code>ViewGroup</code>没有重写，我们来看看<code>ViewGroup</code>的onLayout方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewGroup.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title function_">onLayout</span><span class="params">(<span class="type">boolean</span> changed, <span class="type">int</span> l, <span class="type">int</span> t, <span class="type">int</span> r, <span class="type">int</span> b)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，<code>ViewGroup</code>的onLayout方法变成了抽象方法，子类必须实现它，以完成布局<code>ViewGroup</code>子<code>View</code>的逻辑。</p>
+<p>以<code>FrameLayout </code>为例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// FrameLayout.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onLayout</span><span class="params">(<span class="type">boolean</span> changed, <span class="type">int</span> left, <span class="type">int</span> top, <span class="type">int</span> right, <span class="type">int</span> bottom)</span> &#123;</span><br><span class="line">    layoutChildren(left, top, right, bottom, <span class="literal">false</span> <span class="comment">/* no force left gravity */</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">layoutChildren</span><span class="params">(<span class="type">int</span> left, <span class="type">int</span> top, <span class="type">int</span> right, <span class="type">int</span> bottom, <span class="type">boolean</span> forceLeftGravity)</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">count</span> <span class="operator">=</span> getChildCount();</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">parentLeft</span> <span class="operator">=</span> getPaddingLeftWithForeground();</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">parentRight</span> <span class="operator">=</span> right - left - getPaddingRightWithForeground();</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">parentTop</span> <span class="operator">=</span> getPaddingTopWithForeground();</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">parentBottom</span> <span class="operator">=</span> bottom - top - getPaddingBottomWithForeground();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">View</span> <span class="variable">child</span> <span class="operator">=</span> getChildAt(i);</span><br><span class="line">        <span class="keyword">if</span> (child.getVisibility() != GONE) &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">LayoutParams</span> <span class="variable">lp</span> <span class="operator">=</span> (LayoutParams) child.getLayoutParams();</span><br><span class="line">            <span class="keyword">final</span> <span class="type">int</span> <span class="variable">width</span> <span class="operator">=</span> child.getMeasuredWidth();</span><br><span class="line">            <span class="keyword">final</span> <span class="type">int</span> <span class="variable">height</span> <span class="operator">=</span> child.getMeasuredHeight();</span><br><span class="line">            <span class="type">int</span> childLeft;</span><br><span class="line">            <span class="type">int</span> childTop;</span><br><span class="line">            ...</span><br><span class="line">            <span class="keyword">switch</span> (...) &#123;</span><br><span class="line">                <span class="keyword">case</span> Gravity.CENTER_HORIZONTAL:</span><br><span class="line">                    childLeft = parentLeft + (parentRight - parentLeft - width) / <span class="number">2</span> +</span><br><span class="line">                    lp.leftMargin - lp.rightMargin;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> Gravity.RIGHT:</span><br><span class="line">                    <span class="keyword">if</span> (!forceLeftGravity) &#123;</span><br><span class="line">                        childLeft = parentRight - width - lp.rightMargin;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                <span class="keyword">case</span> Gravity.LEFT:</span><br><span class="line">                <span class="keyword">default</span>:</span><br><span class="line">                    childLeft = parentLeft + lp.leftMargin;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">switch</span> (...) &#123;</span><br><span class="line">                <span class="keyword">case</span> Gravity.TOP:</span><br><span class="line">                    childTop = parentTop + lp.topMargin;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> Gravity.CENTER_VERTICAL:</span><br><span class="line">                    childTop = parentTop + (parentBottom - parentTop - height) / <span class="number">2</span> +</span><br><span class="line">                    lp.topMargin - lp.bottomMargin;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> Gravity.BOTTOM:</span><br><span class="line">                    childTop = parentBottom - height - lp.bottomMargin;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">default</span>:</span><br><span class="line">                    childTop = parentTop + lp.topMargin;</span><br><span class="line">            &#125;</span><br><span class="line">            child.layout(childLeft, childTop, childLeft + width, childTop + height);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>虽然代码很长，但是能看出来这段代码做了三件事：</p>
+<ol>
+<li>计算每个子<code>View</code>的left</li>
+<li>计算每个子<code>View</code>的top</li>
+<li>调用子<code>View</code>的layout方法布局子<code>View</code></li>
+</ol>
+<p>计算子<code>View</code>的left依托于<code>FrameLayout</code>的left、水平方向的gravity（左对齐、水平居中、右对齐）</p>
+<p>计算子<code>View</code>的top依托于<code>FrameLayout</code>的top、竖直方向的gravity（顶部对齐、竖直居中、底部对齐）</p>
+<p>计算完子<code>View</code>的left和top后，依据子<code>View</code>的measuredWidth和measuredHeight，就能计算出子<code>View</code>的right和bottom，因此就能调用子<code>View</code>的layout方法为子<code>View</code>进行布局。</p>
+<h1 id="坐标系、padding和margin"><a href="#坐标系、padding和margin" class="headerlink" title="坐标系、padding和margin"></a>坐标系、padding和margin</h1><p>通读完<code>View</code>、<code>ViewGroup</code>和<code>FrameLayout</code>的布局代码，left、top、right、bottom这几个代表什么意思？<br>如果把一个<code>View</code>理解成一个矩形：</p>
+<ul>
+<li>left - 代表这个矩形的左边与父<code>View</code>左边的距离</li>
+<li>top - 代表这个矩形的上边与父<code>View</code>上边的距离</li>
+<li>right - 代表这个矩形的右边与父<code>View</code>左边的距离</li>
+<li>bottom - 代表这个矩形的下边与父<code>View</code>上边的距离</li>
+</ul>
+<p>可以看到，left、top、right、bottom是基于子<code>View</code>相对于父<code>View</code>的相对坐标系上的定义。相对坐标系的好处在于</p>
+<ol>
+<li>父<code>View</code>可以对子<code>View</code>的布局位置进行限制;</li>
+<li>相比于绝对坐标系（以屏幕为参考系），相对坐标系在递归时更容易对参数进行处理</li>
+</ol>
+<p>此外，在<code>View</code>、<code>ViewGroup</code>和<code>FrameLayout</code>的布局代码中，还出现了padding和margin：</p>
+<ul>
+<li>padding - 父<code>View</code>的空出的位置，压缩子<code>View</code>的布局空间</li>
+<li>margin - 子<code>View</code>主动让出的空间</li>
+</ul>
+<p>一图胜千言：</p>
+<p><img src="/android-view-layout/frame_layout_child_layout.drawio.png"></p>
+<h1 id="View树的布局"><a href="#View树的布局" class="headerlink" title="View树的布局"></a>View树的布局</h1><p>了解了坐标系、padding和margin后，就可以从<code>FrameLayout</code>的布局代码，还原出整棵<code>View</code>树的布局流程：</p>
+<ol>
+<li>父<code>View</code>调用setFrame为自己圈定布局的矩形范围；</li>
+<li>以父<code>View</code>的left、top作为原点，根据padding将子<code>View</code>的布局限定在一个矩形区域内；</li>
+<li>在这个矩形区域内，根据子<code>View</code>的margin、measuredWidth和measuredHeight，布局子<code>View</code>；</li>
+</ol>
+<p>总而言之，一棵<code>View</code>树的布局流程如图：</p>
+<p><img src="/android-view-layout/view_tree_layout.drawio.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><code>View</code>布局的总体流程相较于<code>View</code>测量的而言较为简单，主要分为是否有子<code>View</code>这两种情况：</p>
+<ul>
+<li>有子<code>View</code> - <code>ViewGroup</code>会首先调用setFrame圈住一个(left, top, right, bottom)的矩形区域，再通过onLayout调用子<code>View</code>的layout方法为子<code>View</code>布局；</li>
+<li>无子<code>View</code> - 没有子<code>View</code>的<code>View</code>只会调用setFrame方法，然后调用一般为空实现的onLayout方法。</li>
+</ul>
+<p>而解决<strong>画在哪</strong>这个问题的关键在于setFrame方法，setFrame方法的参数left、top、right和bottom是建立在以当前<code>View</code>的父<code>View</code>为参考系的相对坐标系，从而使得<code>View</code>能够无需关心屏幕坐标及屏幕尺寸，能够在父<code>View</code>给定的(left, top, right, bottom)的约束下进行布局。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/android-view-draw/" data-toggle="tooltip" data-placement="top" title="Android View体系 - 绘制篇">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/android-view-measure/" data-toggle="tooltip" data-placement="top" title="Android View体系 - 测量篇">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/android-view-layout/";
+    var disqus_url = "https://spirytusz.co/android-view-layout/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

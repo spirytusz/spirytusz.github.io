@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          Android View体系 - performTraversals篇 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/android-view-perform-traversals/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.webp')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                        
+                    </div>
+                    <h1>Android View体系 - performTraversals篇</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2022-03-15
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>上面文章：<a href="/android-view-startup">Android View体系 - 启动篇</a>中，我们知道<code>View</code>的三大流程都是performTraversals方法调用的。</p>
+<p>performTraversals作为<code>View</code>三大流程的入口方法，只要子<code>View</code>执行了<code>requestLayout</code>，就必然会调到<code>ViewRootImpl</code>的performTraversals。如此重要的方法，除了协调测量、布局和绘制这三大流程以外，performTraversals还做了什么？</p>
+<p>本篇文章将聚焦performTraversals方法，试图梳理其大致的流程，了解performTraversals的主要职责。</p>
+<h1 id="确认窗口大小"><a href="#确认窗口大小" class="headerlink" title="确认窗口大小"></a>确认窗口大小</h1><p>performTraversals作为<code>View</code>三大流程的入口方法，不仅在应用正常运行的时候会被调用，启动的时候也会调用。</p>
+<p>因此必然有涉及到确认窗口大小的逻辑，这也是performTraversals第一步要做的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performTraversals</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">View</span> <span class="variable">host</span> <span class="operator">=</span> mView;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">int</span> desiredWindowWidth;</span><br><span class="line">    <span class="type">int</span> desiredWindowHeight;</span><br><span class="line">    ...</span><br><span class="line">    WindowManager.<span class="type">LayoutParams</span> <span class="variable">lp</span> <span class="operator">=</span> mWindowAttributes;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">Rect</span> <span class="variable">frame</span> <span class="operator">=</span> mWinFrame;</span><br><span class="line">    <span class="keyword">if</span> (mFirst) &#123;</span><br><span class="line">        ...</span><br><span class="line">        mLayoutRequested = <span class="literal">true</span>;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">final</span> <span class="type">Configuration</span> <span class="variable">config</span> <span class="operator">=</span> mContext.getResources().getConfiguration();</span><br><span class="line">        <span class="keyword">if</span> (shouldUseDisplaySize(lp)) &#123;</span><br><span class="line">            <span class="type">Point</span> <span class="variable">size</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Point</span>();</span><br><span class="line">            mDisplay.getRealSize(size);</span><br><span class="line">            desiredWindowWidth = size.x;</span><br><span class="line">            desiredWindowHeight = size.y;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT</span><br><span class="line">               || lp.height == ViewGroup.LayoutParams.WRAP_CONTENT) &#123;</span><br><span class="line">            desiredWindowWidth = dipToPx(config.screenWidthDp);</span><br><span class="line">            desiredWindowHeight = dipToPx(config.screenHeightDp);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            desiredWindowWidth = frame.width();</span><br><span class="line">            desiredWindowHeight = frame.height();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        desiredWindowWidth = frame.width();</span><br><span class="line">        desiredWindowHeight = frame.height();</span><br><span class="line">        <span class="keyword">if</span> (desiredWindowWidth != mWidth || desiredWindowHeight != mHeight) &#123;</span><br><span class="line">            ...</span><br><span class="line">            mLayoutRequested = <span class="literal">true</span>;</span><br><span class="line">            windowSizeMayChange = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="type">boolean</span> <span class="title function_">shouldUseDisplaySize</span><span class="params">(<span class="keyword">final</span> WindowManager.LayoutParams lp)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> lp.type == TYPE_STATUS_BAR_ADDITIONAL  <span class="comment">// 窗口类型：状态栏不在屏幕顶部</span></span><br><span class="line">            || lp.type == TYPE_INPUT_METHOD       <span class="comment">// 窗口类型：输入法相关，用于输入法应用</span></span><br><span class="line">            || lp.type == TYPE_VOLUME_OVERLAY;    <span class="comment">// 窗口类型：音量窗口</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先拿到窗口的大小，即mWinFrame，这个变量在setView的时候与<code>WindowManagerService</code>跨进程调用的时候初始化的。</p>
+<p>从代码可以看出，窗口大小的确认分两种情况，一种是首次进入performTraversals，另一种是非首次进入performTraversals。</p>
+<h2 id="首次调用performTraversals"><a href="#首次调用performTraversals" class="headerlink" title="首次调用performTraversals"></a>首次调用performTraversals</h2><p>先看看首次进入的情况。</p>
+<p>首次进入performTraversals又分为三种情况：</p>
+<ol>
+<li>特殊窗口类型</li>
+<li>顶级<code>View</code>的宽高为<code>WRAP_CONTENT</code></li>
+<li>一般情况</li>
+</ol>
+<h3 id="特殊窗口类型"><a href="#特殊窗口类型" class="headerlink" title="特殊窗口类型"></a>特殊窗口类型</h3><p>一般用于系统应用，不做讨论</p>
+<h3 id="顶级View的宽高为WRAP-CONTENT"><a href="#顶级View的宽高为WRAP-CONTENT" class="headerlink" title="顶级View的宽高为WRAP_CONTENT"></a>顶级View的宽高为WRAP_CONTENT</h3><p>因为顶级<code>View</code>不一定是<code>DecorView</code>，有可能是我们自己加的悬浮窗，又或者是一个<code>Dialog</code>，所以需要适配宽高为<code>WRAP_CONTENT</code>的情况。</p>
+<p>这种情况下，宽高会被设置为去除状态栏的屏幕宽高。</p>
+<h3 id="一般情况"><a href="#一般情况" class="headerlink" title="一般情况"></a>一般情况</h3><p>一般情况下，<code>LayoutParams</code>为(<code>MATCH_PARENT</code>, <code>MATCH_PARENT</code>)。</p>
+<p>这种情况下，宽高会被设置为<code>WindowManagerService</code>返回的宽高，即frame变量，一般与屏幕宽高相同。</p>
+<h2 id="非首次调用performTraversals"><a href="#非首次调用performTraversals" class="headerlink" title="非首次调用performTraversals"></a>非首次调用performTraversals</h2><p>再来看看非首次进入的情况。</p>
+<p>非首次进入相对较为简单，只是跟旧的结果比较。如果不同，就将标志位<code>windowSizeMayChange </code>置为true。</p>
+<p>确认窗口大小的总体流程如下：</p>
+<p><img src="/android-view-perform-traversals/perform_traversals_compute_frame_size.drawio.png" alt="perform_traversals_compute_frame_size.drawiow"></p>
+<h1 id="预测量"><a href="#预测量" class="headerlink" title="预测量"></a>预测量</h1><p>为什么需要预测量？</p>
+<p>首先需要明确，顶级<code>View</code>不一定是<code>DecorView</code>，也有可能是我们展示的一个<code>Dialog</code>、悬浮窗，又或者是其他情形。</p>
+<p>简单阅读<code>Dialog</code>的代码发现，其实它最终还是调用<code>WindowManager</code>的addView方法，最终走到<code>WindowManagerGlobal</code>，将<code>Dialog</code>的<code>View</code>与新建的<code>ViewRootImpl</code>绑定在一起，然后添加到当前的窗口。</p>
+<p>从<code>Dialog</code>的代码可以知道，一个窗口下是可以有多个<code>ViewRootImpl</code>的，这些<code>ViewRootImpl</code>所管理的顶级<code>View</code>不一定是<code>DecorView</code>。所以<code>ViewRootImpl</code>在设计时，不能只考虑<code>DecorView</code>这种情况，还要考虑<code>Dialog</code>、悬浮窗等情况。</p>
+<p><code>DecorView</code>和其他<code>View</code>有什么区别？一个重要的区别是，<code>DecorView</code>需要撑满窗口，而其他<code>View</code>不一定要撑满窗口。</p>
+<p>以<code>Dialog</code>为例，当<code>Dialog</code>上有一行很长的文字，但却撑满了屏幕的宽度，用户体验不好。用代码来描述这种情况就是：</p>
+<ol>
+<li><code>Dialog</code>的宽度设置为<code>WRAP_CONTENT</code>；</li>
+<li>上面的<code>desiredWindowWidth </code>很接近屏幕尺寸；</li>
+<li><code>Dialog </code>使用<code>desiredWindowWidth </code>和<code>desiredWindowHeight </code>去测量；</li>
+</ol>
+<p>为了避免这种用户体验不佳的情况，performTraversals需要根据给定的顶级<code>View</code>优化<code>desiredWindowWidth </code>和<code>desiredWindowHeight </code>，这也是performTraversals的职责之一：预测量。</p>
+<p>背景介绍完毕，我们来看看代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performTraversals</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">layoutRequested</span> <span class="operator">=</span> mLayoutRequested &amp;&amp; (!mStopped || mReportNextDraw);</span><br><span class="line">    <span class="keyword">if</span> (layoutRequested) &#123;</span><br><span class="line">        ...</span><br><span class="line">        windowSizeMayChange |= measureHierarchy(host, lp, res,</span><br><span class="line">                desiredWindowWidth, desiredWindowHeight);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>layoutRequested为true，走if分支，最终会调用到measureHierarchy方法。看看measureHierarchy方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">measureHierarchy</span><span class="params">(<span class="keyword">final</span> View host, <span class="keyword">final</span> WindowManager.LayoutParams lp,</span></span><br><span class="line"><span class="params">        <span class="keyword">final</span> Resources res, <span class="keyword">final</span> <span class="type">int</span> desiredWindowWidth, <span class="keyword">final</span> <span class="type">int</span> desiredWindowHeight)</span> &#123;</span><br><span class="line">    <span class="type">int</span> childWidthMeasureSpec;</span><br><span class="line">    <span class="type">int</span> childHeightMeasureSpec;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">windowSizeMayChange</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="type">boolean</span> <span class="variable">goodMeasure</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT) &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">final</span> <span class="type">DisplayMetrics</span> <span class="variable">packageMetrics</span> <span class="operator">=</span> res.getDisplayMetrics();</span><br><span class="line">        res.getValue(com.android.internal.R.dimen.config_prefDialogWidth, mTmpValue, <span class="literal">true</span>);</span><br><span class="line">        <span class="type">int</span> <span class="variable">baseSize</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">if</span> (mTmpValue.type == TypedValue.TYPE_DIMENSION) &#123;</span><br><span class="line">            baseSize = (<span class="type">int</span>)mTmpValue.getDimension(packageMetrics)</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">if</span> (baseSize != <span class="number">0</span> &amp;&amp; desiredWindowWidth &gt; baseSize) &#123;</span><br><span class="line">            childWidthMeasureSpec = getRootMeasureSpec(baseSize, lp.width);</span><br><span class="line">            childHeightMeasureSpec = getRootMeasureSpec(desiredWindowHeight,</span><br><span class="line">            performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);  <span class="comment">// ①</span></span><br><span class="line">            ...</span><br><span class="line">            <span class="keyword">if</span> ((host.getMeasuredWidthAndState()&amp;View.MEASURED_STATE_TOO_SMALL) == <span class="number">0</span>) &#123;</span><br><span class="line">                goodMeasure = <span class="literal">true</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                baseSize = (baseSize+desiredWindowWidth)/<span class="number">2</span>; </span><br><span class="line">                childWidthMeasureSpec = getRootMeasureSpec(baseSize, lp.width);</span><br><span class="line">                performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);  <span class="comment">// ②</span></span><br><span class="line">                <span class="keyword">if</span> ((host.getMeasuredWidthAndState()&amp;View.MEASURED_STATE_TOO_SMALL) == <span class="number">0</span>) &#123;</span><br><span class="line">                    goodMeasure = <span class="literal">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!goodMeasure) &#123;</span><br><span class="line">        childWidthMeasureSpec = getRootMeasureSpec(desiredWindowWidth, lp.width);</span><br><span class="line">        childHeightMeasureSpec = getRootMeasureSpec(desiredWindowHeight, lp.height);</span><br><span class="line">        performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);  <span class="comment">// ③</span></span><br><span class="line">        <span class="keyword">if</span> (mWidth != host.getMeasuredWidth() || mHeight != host.getMeasuredHeight()) &#123;</span><br><span class="line">            windowSizeMayChange = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> windowSizeMayChange;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到measureHierarchy内部有①、②、③处调用performMeasure进行测量操作。</p>
+<h2 id="预测量①"><a href="#预测量①" class="headerlink" title="预测量①"></a>预测量①</h2><p>如果<code>View</code>的宽度是<code>WRAP_CONTENT</code>的，就会进行第一次预测量。</p>
+<p>在第一次预测量，会做最乐观的估计，先以baseSize（<code>R.dimen.config_prefDialogWidth</code>）作为宽度，让<code>View</code>去测量。</p>
+<p>如果baseSize足够<code>View</code>去展示，就使用baseSize作为宽度，预测量结束；否则就进行第二次预测量。
+	</p>
+<h2 id="预测量②"><a href="#预测量②" class="headerlink" title="预测量②"></a>预测量②</h2><p>如果给定的baseSize不足以让<code>View</code>展示，就会进行第二次预测量。如何知道给定的baseSize不足以让<code>View</code>测量？</p>
+<p>如果<code>View</code>对给定的baseSize不满意，就会反馈在state中，可以调用getMeasuredWidthAndState方法来获取。如果测量结果与<code>View.MEASURED_STATE_TOO_SMALL</code>按位与的结果不为0，说明<code>View</code>对给定的大小不满意，即给定的尺寸不够展示<br>	<br>第二次进一步扩大了baseSize的大小，以原有baseSize和desiredWindowWidth的均值为baseSize，再一次进行尝试测量。<br>	<br>经过测量后，如果给定的尺寸足以让<code>View</code>展示，就以给定的尺寸为宽度，并将goodMeasure置为true，预测量结束；否则就进入第三次预测量。
+	</p>
+<h2 id="预测量③"><a href="#预测量③" class="headerlink" title="预测量③"></a>预测量③</h2><p>前两次预测量发现给定的baseSize都不足以让<code>View</code>展示，或者是<code>View</code>的宽度不是<code>wrap_content</code>，因此使用接近屏幕宽度的desiredWindowWidth进行测量，将desiredWindowWidth设置为宽度结果，然后结束流程。</p>
+<p>预测量的主要流程如图：</p>
+<p><img src="/android-view-perform-traversals/perform_traversals_permeasure.drawio.png" alt="perform_traversals_permeasure"></p>
+<h1 id="三大流程-测量"><a href="#三大流程-测量" class="headerlink" title="三大流程 - 测量"></a>三大流程 - 测量</h1><p>预测量完毕，顶级<code>View</code>的尺寸已经确认完毕，可以进行测量步骤：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performTraversals</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (mFirst || windowShouldResize || viewVisibilityChanged || cutoutChanged || params != <span class="literal">null</span></span><br><span class="line">            || mForceNextWindowRelayout) &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">if</span> (mWidth != frame.width() || mHeight != frame.height()) &#123;</span><br><span class="line">            mWidth = frame.width();</span><br><span class="line">            mHeight = frame.height();</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (!mStopped || mReportNextDraw) &#123;</span><br><span class="line">            <span class="type">boolean</span> <span class="variable">focusChangedDueToTouchMode</span> <span class="operator">=</span> ensureTouchModeLocally(...);</span><br><span class="line">            <span class="keyword">if</span> (focusChangedDueToTouchMode || ...) &#123;</span><br><span class="line">                ...</span><br><span class="line">                <span class="type">int</span> <span class="variable">childWidthMeasureSpec</span> <span class="operator">=</span> getRootMeasureSpec(mWidth, lp.width);</span><br><span class="line">                <span class="type">int</span> <span class="variable">childHeightMeasureSpec</span> <span class="operator">=</span> getRootMeasureSpec(mHeight, lp.height);</span><br><span class="line">                ...</span><br><span class="line">                performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);</span><br><span class="line">                ...</span><br><span class="line">                <span class="type">int</span> <span class="variable">width</span> <span class="operator">=</span> host.getMeasuredWidth();</span><br><span class="line">                <span class="type">int</span> <span class="variable">height</span> <span class="operator">=</span> host.getMeasuredHeight();</span><br><span class="line">                <span class="type">boolean</span> <span class="variable">measureAgain</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">                <span class="keyword">if</span> (lp.horizontalWeight &gt; <span class="number">0.0f</span>) &#123;</span><br><span class="line">                    width += (<span class="type">int</span>) ((mWidth - width) * lp.horizontalWeight);</span><br><span class="line">                    childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(width,</span><br><span class="line">                            MeasureSpec.EXACTLY);</span><br><span class="line">                    measureAgain = <span class="literal">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (lp.verticalWeight &gt; <span class="number">0.0f</span>) &#123;</span><br><span class="line">                    height += (<span class="type">int</span>) ((mHeight - height) * lp.verticalWeight);</span><br><span class="line">                    childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(height,</span><br><span class="line">                            MeasureSpec.EXACTLY);</span><br><span class="line">                    measureAgain = <span class="literal">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                </span><br><span class="line">                <span class="keyword">if</span> (measureAgain) &#123;</span><br><span class="line">                    performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        maybeHandleWindowMove(frame);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>能够进行测量，需要满足六个条件其中之一：</p>
+<table>
+<thead>
+<tr>
+<th>条件</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mFirst</td>
+<td>首次进行performTraversals</td>
+<td>-</td>
+</tr>
+<tr>
+<td>windowShouldResize</td>
+<td>窗口尺寸是否需要改变</td>
+<td>跟预测量有关</td>
+</tr>
+<tr>
+<td>viewVisibilityChanged</td>
+<td><code>View</code>的可见性是否改变</td>
+<td>-</td>
+</tr>
+<tr>
+<td>cutoutChanged</td>
+<td>刘海屏的缺口是否改变</td>
+<td>-</td>
+</tr>
+<tr>
+<td>params !&#x3D; null</td>
+<td>窗口的lp是否改变</td>
+<td>-</td>
+</tr>
+<tr>
+<td>mForceNextWindowRelayout</td>
+<td>WMS是否强制改变了窗口尺寸</td>
+<td>-</td>
+</tr>
+</tbody></table>
+<p>紧接着如果不是stop状态，就正式开始测量步骤。</p>
+<h2 id="测量-不带权重"><a href="#测量-不带权重" class="headerlink" title="测量 - 不带权重"></a>测量 - 不带权重</h2><p>如果布局不带有权重（weight），那只需一次测量即可。</p>
+<h2 id="测量-带有权重"><a href="#测量-带有权重" class="headerlink" title="测量 - 带有权重"></a>测量 - 带有权重</h2><p>经过一次测量后，如果发现<code>LayoutParams</code>中带有宽度权重 or 高度权重，则需要根据测量的宽度 or 高度乘以权重值，然后再执行一次测量。</p>
+<h1 id="三大流程-布局"><a href="#三大流程-布局" class="headerlink" title="三大流程 - 布局"></a>三大流程 - 布局</h1><p>经过测量后，就可以进行布局。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performTraversals</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">final</span> <span class="type">boolean</span> <span class="variable">didLayout</span> <span class="operator">=</span> layoutRequested &amp;&amp; (!mStopped || mReportNextDraw);</span><br><span class="line">    <span class="keyword">if</span> (didLayout) &#123;</span><br><span class="line">        performLayout(lp, mWidth, mHeight);</span><br><span class="line">        ...</span><br><span class="line">    &#125; </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="三大流程-绘制"><a href="#三大流程-绘制" class="headerlink" title="三大流程 - 绘制"></a>三大流程 - 绘制</h1><p>经过布局后，就可以进行绘制。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performTraversals</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    mFirst = <span class="literal">false</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="type">boolean</span> <span class="variable">cancelDraw</span> <span class="operator">=</span> mAttachInfo.mTreeObserver.dispatchOnPreDraw() || !isViewVisible;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (!cancelDraw) &#123;</span><br><span class="line">        ...</span><br><span class="line">        performDraw()</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (isViewVisible) &#123;</span><br><span class="line">            <span class="comment">// Try again</span></span><br><span class="line">            scheduleTraversals();</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>总体而言，performTraversals的逻辑大致可以分为五块：</p>
+<ul>
+<li>确认窗口大小</li>
+<li>预测量</li>
+<li>测量</li>
+<li>布局</li>
+<li>绘制</li>
+</ul>
+<p>首先，为了确认窗口大小，performTraversals会根据<code>LayoutParams</code>的宽高及其各种标志位，配合WMS给定的窗口大小，最终计算出可供<code>View</code>展示的大小；</p>
+<p>然后呢，为了优化顶级<code>View</code>不是<code>DecorView</code>下的展示体验，performTraversals会进行预测量，经过预测量，会给出一个合理的尺寸，让<code>View </code>进行测量；</p>
+<p>经过预测量后，接下来就是<code>View</code>的三大流程：测量、布局以及绘制。</p>
+<p>此后performTraversals结束。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/android-view-measure/" data-toggle="tooltip" data-placement="top" title="Android View体系 - 测量篇">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/android-view-startup/" data-toggle="tooltip" data-placement="top" title="Android View体系 - 启动篇">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/android-view-perform-traversals/";
+    var disqus_url = "https://spirytusz.co/android-view-perform-traversals/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

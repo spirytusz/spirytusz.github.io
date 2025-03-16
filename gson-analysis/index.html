@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          Gson原理分析 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/gson-analysis/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.jpeg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#json" title="json">json</a>
+                        
+                    </div>
+                    <h1>Gson原理分析</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by spirytusz on
+                        2021-10-12
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h1><p><a href="https://github.com/google/gson">Gson</a>是一个Java平台的Json库，用于json的序列化和反序列化。</p>
+<p>实践发现对于大的json字符串转换成实例的时间性能并不是很好。</p>
+<p>本文将从源码的角度探索Gson反序列化json耗时的原因，并给出大致的解决方案。</p>
+<span id="more"></span>
+
+<h1 id="2-太长不看"><a href="#2-太长不看" class="headerlink" title="2. 太长不看"></a>2. 太长不看</h1><p>Gson反序列化耗时的原因有三（影响大小递减）：</p>
+<ol>
+<li>默认的<code>TypeAdapter</code>会反射遍历类及其超类的所有字段，并生成一个Map表；</li>
+<li>默认的<code>TypeAdapter</code>在setValue时使用到了反射；</li>
+<li>默认的<code>TypeAdapter</code>使用到了反射来创建实例。</li>
+</ol>
+<p>解决方案就是书写<code>TypeAdapter</code>。</p>
+<p>但书写TypeAdapter十分麻烦，可以考虑以下两种方法（或者其他更好的）方法来生成代码：</p>
+<ol>
+<li><p>注解处理器(kapt)生成代码。</p>
+<p> 优点：易于接入</p>
+<p> 缺点：kapt期间无法获取一些kotlin代码特性（如泛型可空）；对编译期有侵入。</p>
+</li>
+<li><p>静态分析代码语法树并生成代码。</p>
+<p> 优点：对kotlin语言特性<strong>完全</strong>支持；对项目代码和编译期零侵入。</p>
+<p> 缺点：每种语言都要适配一份（不同语言的语法树不同）。</p>
+</li>
+</ol>
+<h1 id="3-基本用法"><a href="#3-基本用法" class="headerlink" title="3. 基本用法"></a>3. 基本用法</h1><p>工欲善其事，必先利其器。首先需要了解一下如何使用Gson。</p>
+<p>对下面这个类：</p>
+<p><img src="/gson-analysis/Foo.jpeg" alt="Foo.jpeg"></p>
+<p>从json字符串生成一个<code>Foo</code>实例，可以调用<code>Gson.fromJson</code>方法</p>
+<p><img src="/gson-analysis/common_use.jpeg" alt="common_use.jpeg"></p>
+<p>同时，Gson也支持泛型：</p>
+<p><img src="/gson-analysis/parameterized_use.jpeg" alt="parameterized_use.jpeg"></p>
+<h1 id="4-源码解读"><a href="#4-源码解读" class="headerlink" title="4. 源码解读"></a>4. 源码解读</h1><p>在分析Gson源码前，我们可以对Gson反序列化流程和序列化流程进行一个大致的猜想。</p>
+<p>Gson反序列化时也许会是这样的：</p>
+<ol>
+<li>根据type来反射创建一个实例；</li>
+<li>以key-value的形式，读取json字符串，并反射的设置值；</li>
+<li>返回这个实例。</li>
+</ol>
+<p><img src="/gson-analysis/%E7%AE%80%E9%99%8B%E6%B5%81%E7%A8%8B.png" alt="简陋流程.png"></p>
+<p>这只是大致的猜想，具体还是要看看源码，验证or推翻我们的猜想。</p>
+<h2 id="4-1-前置知识"><a href="#4-1-前置知识" class="headerlink" title="4.1. 前置知识"></a>4.1. 前置知识</h2><p>在阅读Gson源码之前，需要知道一些前置知识，这样在我们读完源码之后，对Gson源码能有一个更加清晰的、立体的理解。</p>
+<h3 id="4-1-1-TypeAdapter"><a href="#4-1-1-TypeAdapter" class="headerlink" title="4.1.1. TypeAdapter"></a>4.1.1. TypeAdapter</h3><p>TypeAdapter是Gson内部fromJson和toJson的通用接口，Gson内部调用read方法来将json字符串转换为实例。</p>
+<p>返回类型<code>T</code>，代表fromJson的返回；</p>
+<p><code>JsonReader</code>能够以key-value的形式，流式读取json。</p>
+<p><img src="/gson-analysis/TypeAdapter%E4%BB%A3%E7%A0%81.jpeg" alt="TypeAdapter代码.jpeg"></p>
+<p>Gson内置了许多类型的TypeAdapter，Gson默认使用这些TypeAdapter来进行fromJson和toJson：</p>
+<p><img src="/gson-analysis/%E5%86%85%E7%BD%AETypeAdapter.jpeg" alt="内置TypeAdapter.jpeg"></p>
+<h3 id="4-1-2-TypeAdapterFactory"><a href="#4-1-2-TypeAdapterFactory" class="headerlink" title="4.1.2. TypeAdapterFactory"></a>4.1.2. TypeAdapterFactory</h3><p><code>TypeAdapterFactory</code>是<code>TypeAdapter</code>的工厂类，负责创建指定类型的<code>TypeAdapter</code>。</p>
+<p><img src="/gson-analysis/TypeAdapterFactory%E4%BB%A3%E7%A0%81.jpeg" alt="TypeAdapterFactory代码.jpeg"></p>
+<p>在Gson实例中，<code>TypeAdapterFactory</code>被保存在一个叫做factories的List中：</p>
+<p><img src="/gson-analysis/GsonTypeAdapterFactory%E7%BA%BF%E6%80%A7%E5%88%97%E8%A1%A8.jpeg" alt="GsonTypeAdapterFactory线性列表.jpeg"></p>
+<h2 id="4-2-解析Json"><a href="#4-2-解析Json" class="headerlink" title="4.2. 解析Json"></a>4.2. 解析Json</h2><p><code>TypeAdapterFactory</code>和<code>TypeAdapter</code>都是fromJson的重要角色。不妨我们从入口开始分析代码：</p>
+<p><img src="/gson-analysis/entry.jpeg" alt="entry.jpeg"></p>
+<p>通常我们都是这么调用Gson来解析Json的。</p>
+<p>点进源码，一路追踪到fromJson的重载方法：</p>
+<p><img src="/gson-analysis/fromJson.jpeg" alt="fromJson.jpeg"></p>
+<p>可以看到fromJson大致分为两步走：</p>
+<ol>
+<li>根据TypeToken获取<code>TypeAdapter</code>;</li>
+<li>调用TypeAdapter的read方法生成一个实例并返回。</li>
+</ol>
+<p>首先咱们看看getAdapter是如何获取<code>TypeAdapter </code>的。</p>
+<h3 id="4-2-1-解析Json-获取TypeAdapter"><a href="#4-2-1-解析Json-获取TypeAdapter" class="headerlink" title="4.2.1. 解析Json-获取TypeAdapter"></a>4.2.1. 解析Json-获取TypeAdapter</h3><p><img src="/gson-analysis/getAdapter.jpeg" alt="getAdapter.jpeg"></p>
+<p>可以看到逻辑大致分为两个部分：</p>
+<ol>
+<li>尝试从缓存typeTokenCache内取；</li>
+<li>根据typeToken来在fatories里面线性查找。</li>
+</ol>
+<p>首先会尝试从缓存中取；如果缓存中没有，getAdapter会遍历factories的每一个元素：如果这个<code>TypeAdapterFactory</code>能够创建这个类型（typeToken）的<code>TypeAdapter</code>，就会返回一个非空的<code>TypeAdapter</code>，否则就返回空。</p>
+<p>因为这里使用到的是默认的Gson实例，并没有<code>Foo</code>这个类对应的<code>TypeAdapter </code>，所以最终getAdapter会返回一个<code>ReflectiveTypeAdapterFactory</code>实例（factories的最后一个元素），使用它来创建一个<code>TypeAdapter</code>。</p>
+<p><code>ReflectiveTypeAdapterFactory</code>的create方法返回了一个内部类（<code>ReflectiveTypeAdapterFactory.Adapter</code>）的实例，就是<code>TypeAdapter</code>。</p>
+<p><img src="/gson-analysis/ReflectiveTypeAdapterFactory.jpeg" alt="ReflectiveTypeAdapterFactory.jpeg"></p>
+<p>可以看到Adapter构造方法的第二个参数调用了getBoundFields方法，这就是耗时所在：</p>
+<p><img src="/gson-analysis/%E9%81%8D%E5%8E%86%E5%AD%97%E6%AE%B5.png" alt="遍历字段.png"></p>
+<p>这里的type是带有泛型的类型，raw就是不带泛型的类型。</p>
+<p>比如:</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>type</th>
+<th>raw</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Int</td>
+<td>Int</td>
+<td>Int</td>
+</tr>
+<tr>
+<td>List&lt;Int&gt;</td>
+<td>List&lt;Int&gt;</td>
+<td>List</td>
+</tr>
+<tr>
+<td>List&lt;List&lt;Int&gt;&gt;</td>
+<td>List&lt;List&lt;Int&gt;&gt;</td>
+<td>List</td>
+</tr>
+</tbody></table>
+<p>阅读这段代码后，不难看出getBoundFileds做了下面几件事：</p>
+<ol>
+<li>遍历当前类（raw）及其超类的所有字段；</li>
+<li>对于每个字段，都会创建一个BoundFiled；</li>
+</ol>
+<p>BoundFiled可以看做是对字段的封装，提供了对字段的读写能力。</p>
+<p>由于这个方法有大量的反射逻辑，因此这个方法在首次调用时十分的耗时。</p>
+<p>接下来看看<code>ReflectiveTypeAdapterFactory.Adapter</code>的read方法：</p>
+<p><img src="/gson-analysis/Reflective.read.jpeg" alt="Reflective.read.jpeg"></p>
+<p>可以很明显的看到，read方法大致分为两步</p>
+<ol>
+<li>创建实例；</li>
+<li>遍历json字符串的key-value并设置值。</li>
+</ol>
+<h3 id="4-2-2-解析Json-创建实例"><a href="#4-2-2-解析Json-创建实例" class="headerlink" title="4.2.2. 解析Json-创建实例"></a>4.2.2. 解析Json-创建实例</h3><p>先来看看Gson是如何构造一个Foo实例。</p>
+<p>constructor能够生成对应类型的实例，它是实例化<code>ReflectiveTypeAdapterFactory.Adapter</code>的时候传入的。</p>
+<p>在<code>ReflectiveTypeAdapterFactory</code>中，是通过<code>ConstructorConstructor.get</code>来创建的constructor的。</p>
+<p>看看<code>ConstructorConstructor.get</code>内部干了啥：</p>
+<p>情况1:<br><img src="/gson-analysis/constructor_1.jpeg" alt="constructor_1.jpeg"></p>
+<p>情况2:<br><img src="/gson-analysis/constructor_2.jpeg" alt="constructor_2.jpeg"></p>
+<p>情况3:<br><img src="/gson-analysis/constructor_3.jpeg" alt="constructor_3.jpeg"></p>
+<p>情况4:<br><img src="/gson-analysis/constructor_4.jpeg" alt="constructor_4.jpeg"></p>
+<p>情况5:<br><img src="/gson-analysis/constructor_5.jpeg" alt="constructor_5.jpeg"></p>
+<p>Gson内部在实例化一个对象时，大致分为了四种方式，这四种方式能覆盖所有的情况:</p>
+<ol>
+<li>使用事先设置好的实例构造器去构造实例，对应情况1和情况2；</li>
+<li>使用类的无参来构造实例，对应情况3；</li>
+<li>构造集合类型的实例，对应情况4；</li>
+<li>上面三种情况都不可行的话，使用兜底策略，使用unsafe直接构造实例，对应情况5。</li>
+</ol>
+<p>具体到这个例子上，创建<code>Foo</code>实例时对应的是情况3（<code>Foo</code>的所有字段都有默认值编译成Java代码时会有一个无参构造方法）。</p>
+<h3 id="4-2-3-解析Json-设置字段值"><a href="#4-2-3-解析Json-设置字段值" class="headerlink" title="4.2.3. 解析Json-设置字段值"></a>4.2.3. 解析Json-设置字段值</h3><p>再回到<code>ReflectiveTypeAdapterFactory.Adapter</code>的read方法。</p>
+<p>Gson使用<code>JsonReader</code>，从json中读取key-value，并调用BoundField.read方法来把读到的值设置进去。</p>
+<p>此后，Gson只需不断的调用<code>JsonReader</code>的next系列方法来读取json字符串的key-value值，然后把值通过BoundField设置进对应的字段。</p>
+<p>至此，设置值的流程结束。</p>
+<h3 id="4-2-4-总结"><a href="#4-2-4-总结" class="headerlink" title="4.2.4. 总结"></a>4.2.4. 总结</h3><p>Gson解析json的逻辑看起来并不复杂，主要分为三大步：</p>
+<ol>
+<li>获取TypeAdapter；</li>
+<li>反射创建实例；</li>
+<li>反射设置值。</li>
+</ol>
+<p>在获取TypeAdapter的时候，由于<code>Foo</code>没有事先把写好的TypeAdapter给设置到Gson实例内，Gson内部在获取TypeAdapter时，最终会获取到<code>ReflectiveTypeAdapterFactory.Adapter</code>这个TypeAdapter；在创建<code>ReflectiveTypeAdapterFactory.Adapter</code>时，需要反射遍历类及其超类的所有字段；</p>
+<p>在反射创建实例的时候，由于没有把实现写好的InstanceCreator给设置到Gson实例内，Gson内部就会反射<code>Foo</code>的无参构造方法来创建实例(<code>Foo</code>的所有字段都有默认值，编译成Java时会有一个无参构造方法)；</p>
+<p>在反射设置值时，通过事先创建好的BoundField，调用其read方法将值设置到这个字段中。</p>
+<p>最终只需要返回这个实例即可。</p>
+<h1 id="5-耗时点"><a href="#5-耗时点" class="headerlink" title="5. 耗时点"></a>5. 耗时点</h1><p>从上文中不难看出，裸Gson对json字符串的解析时存在性能瓶颈的(按影响的大小排序，由大到小)：</p>
+<ol>
+<li>默认的TypeAdapter会反射遍历类及其超类的所有字段，并生成一个Map表；</li>
+<li>默认的TypeAdapter在setValue时使用到了反射；</li>
+<li>默认的TypeAdapter使用到了反射来创建实例。</li>
+</ol>
+<p>火焰图能够印证我的结论。</p>
+<p><img src="/gson-analysis/%E7%81%AB%E7%84%B0%E5%9B%BE.png" alt="火焰图.png"></p>
+<h1 id="6-解决方法"><a href="#6-解决方法" class="headerlink" title="6. 解决方法"></a>6. 解决方法</h1><h2 id="6-1-手写TypeAdapter"><a href="#6-1-手写TypeAdapter" class="headerlink" title="6.1. 手写TypeAdapter"></a>6.1. 手写TypeAdapter</h2><p>书写TypeAdapter是一个重复性劳动的体力活。主要分为两部分，toJson部分（对应write方法）和fromJson部分（对应read方法）。这里只讨论反fromJson部分，以上面的类<code>Foo</code>为例。</p>
+<p><img src="/gson-analysis/manually_write_type_adapter.jpeg" alt="manually_write_type_adapter.jpeg"></p>
+<p>这是对json字符串进行fromJson的手写TypeAdapter，要分为三步：</p>
+<ol>
+<li>先定义好临时变量；</li>
+<li>不断地从json字符串中读取key-value；</li>
+<li>把所有临时变量组装成一个实例返回。</li>
+</ol>
+<p>可以看到我仅仅是为了读取4个字段并生成实例，就写了很多行代码，并且这段代码还没考虑异常的场景，十分麻烦。</p>
+<h2 id="6-2-使用Kapt生成代码"><a href="#6-2-使用Kapt生成代码" class="headerlink" title="6.2. 使用Kapt生成代码"></a>6.2. 使用Kapt生成代码</h2><p>不难看出上面手写的代码具有一定的规律，可以使用代码生成技术来生成TypeAdapter。</p>
+<p>对于read方法的生成，无外乎三步</p>
+<ol>
+<li>生成临时变量，以保存读取到的值；</li>
+<li>生成一个while - when表达式，不断的调用<code>JsonReader</code>的方法读取key-value，存储到这些临时变量中；</li>
+<li>把所有的临时变量装配成返回类型并返回。</li>
+</ol>
+<p>需要注意的是，第二步需要对不同的类型抽象出一个接口，每个实现专门读取每种类型的数据。</p>
+<p>但Kapt有它的局限性：</p>
+<ol>
+<li>kapt阶段代码已经被编译成了java代码，许多kotlin特性均已丢失；</li>
+<li>对编译阶段有侵入，需要处理的类越多，越耗时。</li>
+</ol>
+<p>第一个局限性好解决，一是读取kotlin metadata，二是直接使用KSP。</p>
+<p>第二个局限性不好解决，Kapt是编译期的工具，注定是侵入编译期的。</p>
+<h2 id="6-3-编写IDEA-Plugin"><a href="#6-3-编写IDEA-Plugin" class="headerlink" title="6.3. 编写IDEA Plugin"></a>6.3. 编写IDEA Plugin</h2><p>使用IDEA Plugin，能够直接解决Kapt的第二个局限性：对编译期有侵入；<br>并且，IDEA 提供了一个PSI (Project Structure Interface)，它是对抽象语法树AST(Abstract Syntax Tree)的封装。使用PSI，能够静态分析代码，以及生成代码。</p>
+<p>但IDEA Plugin也有局限性：</p>
+<p>因为是分析代码语法树，不同的语言语法树不同，所以要分别适配。</p>
+<h1 id="7-总结"><a href="#7-总结" class="headerlink" title="7. 总结"></a>7. 总结</h1><p>Gson的默认fromJson逻辑耗时，是因为使用到了大量的反射。</p>
+<p>因此我们可以重新书写一个没有反射的逻辑，即TypeAdapter，来提速。</p>
+<p>写TypeAdapter有不同的方案，不同的方案各有优劣，可以根据实际情况按需使用。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/va-analysis/" data-toggle="tooltip" data-placement="top" title="浅谈虚拟框架VirtualApp原理 & 检测方案">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/AndroidLua/" data-toggle="tooltip" data-placement="top" title="记Android层执行Lua脚本的一次实践">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/gson-analysis/";
+    var disqus_url = "https://spirytusz.co/gson-analysis/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

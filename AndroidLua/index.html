@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          记Android层执行Lua脚本的一次实践 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/AndroidLua/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.jpg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                        
+                          <a class="tag" href="/tags/#lua" title="lua">lua</a>
+                        
+                    </div>
+                    <h1>记Android层执行Lua脚本的一次实践</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2019-07-23
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="0-前言"><a href="#0-前言" class="headerlink" title="0. 前言"></a>0. 前言</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;最近一直在写Lua脚本，有时候出了问题，不知道是Lua层的问题，还是上游的问题，不知道从何下手。于是我学习了一点C&#x2F;C++和JNI，把整个解析Lua脚本包、执行Lua脚本的流程全部都读了一遍。熟悉了一遍之后，就萌生了自己封一个Android跑Lua脚本库的想法。于是就有这篇博文。C&#x2F;C++和Kotlin我都不熟，所以这次我主要用这两种语言来写（所以会很Java Style）。</p>
+<span id="more"></span>
+
+<h1 id="1-环境搭建"><a href="#1-环境搭建" class="headerlink" title="1. 环境搭建"></a>1. 环境搭建</h1><p>首先现在Lua<a href="https://www.lua.org/download.html">官网</a>下载Lua的源码，我用的是5.3.5版本的。然后把源码导入到Project中，写好CMakeList：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># For more information about using CMake with Android Studio, read the</span></span><br><span class="line"><span class="comment"># documentation: https://d.android.com/studio/projects/add-native-code.html</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Sets the minimum version of CMake required to build the native library.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">cmake_minimum_required</span>(VERSION <span class="number">3.4</span>.<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Creates and names a library, sets it as either STATIC</span></span><br><span class="line"><span class="comment"># or SHARED, and provides the relative paths to its source code.</span></span><br><span class="line"><span class="comment"># You can define multiple libraries, and CMake builds them for you.</span></span><br><span class="line"><span class="comment"># Gradle automatically packages shared libraries with your APK.</span></span><br><span class="line"><span class="keyword">add_definitions</span>(-Wno-deprecated)</span><br><span class="line"></span><br><span class="line"><span class="keyword">add_library</span>( <span class="comment"># Sets the name of the library.</span></span><br><span class="line">        luabridge</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Sets the library as a shared library.</span></span><br><span class="line">        SHARED</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Provides a relative path to your source file(s).</span></span><br><span class="line">        src/main/jni/lua/lapi.c</span><br><span class="line">        src/main/jni/lua/lauxlib.c</span><br><span class="line">        src/main/jni/lua/lbaselib.c</span><br><span class="line">        src/main/jni/lua/lbitlib.c</span><br><span class="line">        src/main/jni/lua/lcode.c</span><br><span class="line">        src/main/jni/lua/lcorolib.c</span><br><span class="line">        src/main/jni/lua/lctype.c</span><br><span class="line">        src/main/jni/lua/ldblib.c</span><br><span class="line">        src/main/jni/lua/ldebug.c</span><br><span class="line">        src/main/jni/lua/ldo.c</span><br><span class="line">        src/main/jni/lua/ldump.c</span><br><span class="line">        src/main/jni/lua/lfunc.c</span><br><span class="line">        src/main/jni/lua/lgc.c</span><br><span class="line">        src/main/jni/lua/linit.c</span><br><span class="line">        src/main/jni/lua/liolib.c</span><br><span class="line">        src/main/jni/lua/llex.c</span><br><span class="line">        src/main/jni/lua/lmathlib.c</span><br><span class="line">        src/main/jni/lua/lmem.c</span><br><span class="line">        src/main/jni/lua/loadlib.c</span><br><span class="line">        src/main/jni/lua/lobject.c</span><br><span class="line">        src/main/jni/lua/lopcodes.c</span><br><span class="line">        src/main/jni/lua/loslib.c</span><br><span class="line">        src/main/jni/lua/lparser.c</span><br><span class="line">        src/main/jni/lua/lstate.c</span><br><span class="line">        src/main/jni/lua/lstring.c</span><br><span class="line">        src/main/jni/lua/lstrlib.c</span><br><span class="line">        src/main/jni/lua/ltable.c</span><br><span class="line">        src/main/jni/lua/ltablib.c</span><br><span class="line">        src/main/jni/lua/ltm.c</span><br><span class="line">        src/main/jni/lua/lua.c</span><br><span class="line">        <span class="comment">#src/main/jni/lua/luac.c</span></span><br><span class="line">        src/main/jni/lua/lundump.c</span><br><span class="line">        src/main/jni/lua/lutf8lib.c</span><br><span class="line">        src/main/jni/lua/lvm.c</span><br><span class="line">        src/main/jni/lua/lzio.c)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Searches for a specified prebuilt library and stores the path as a</span></span><br><span class="line"><span class="comment"># variable. Because CMake includes system libraries in the search path by</span></span><br><span class="line"><span class="comment"># default, you only need to specify the name of the public NDK library</span></span><br><span class="line"><span class="comment"># you want to add. CMake verifies that the library exists before</span></span><br><span class="line"><span class="comment"># completing its build.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">find_library</span>( <span class="comment"># Sets the name of the path variable.</span></span><br><span class="line">        log-lib</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Specifies the name of the NDK library that</span></span><br><span class="line">        <span class="comment"># you want CMake to locate.</span></span><br><span class="line">        log)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Specifies libraries CMake should link to your target library. You</span></span><br><span class="line"><span class="comment"># can link multiple libraries, such as libraries you define in this</span></span><br><span class="line"><span class="comment"># build script, prebuilt third-party libraries, or system libraries.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">target_link_libraries</span>( <span class="comment"># Specifies the target library.</span></span><br><span class="line">        luabridge</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Links the target library to the log library</span></span><br><span class="line">        <span class="comment"># included in the NDK.</span></span><br><span class="line">        <span class="variable">$&#123;log-lib&#125;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我要跑是 <strong>*.lua</strong> 类型的脚本，那就留下<strong>lua.c</strong>并删掉<strong>luac.c</strong>，CMakeList里面也要跟着注释掉。另外，因为我把Lua的源代码导入进来当做一个库，所以也不需要main方法了，把lua.c里面的main方法注释掉。最后Rebuild一下Project就可以了。</p>
+<h1 id="2-Android单向调用Lua"><a href="#2-Android单向调用Lua" class="headerlink" title="2. Android单向调用Lua"></a>2. Android单向调用Lua</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;先定一个小目标，Android层调用Lua层的函数，Lua层做一个加法后把结果返回给Android层。先写好Lua脚本：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">test</span><span class="params">(a, b)</span></span></span><br><span class="line">    <span class="keyword">return</span> a + b</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这个Lua脚本很简单，把传过来的a和b相加后返回。现在我们可以开始考虑Native层的实现。在考虑实现之前，需要了解Lua虚拟栈和几个Lua C API。</p>
+<h2 id="2-1-Lua虚拟栈"><a href="#2-1-Lua虚拟栈" class="headerlink" title="2.1. Lua虚拟栈"></a>2.1. Lua虚拟栈</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;Lua层和Native层的数据交换是通过Lua虚拟栈来完成的。这个虚拟栈和普通的栈略有不同，它可以通过负值索引来访问指定元素。如图：</p>
+<img src="/AndroidLua/lua_stack.png" class="" title="Lua虚拟栈">
+<p>&nbsp;&nbsp;&nbsp;&nbsp;和普通的栈一样，Lua虚拟栈同样遵循先进后出原则，索引从下往上增加。不同的是Lua虚拟栈支持负值索引，使用负值索引可以自栈顶向下索引。</p>
+<h2 id="2-2-Lua-C-APIs"><a href="#2-2-Lua-C-APIs" class="headerlink" title="2.2. Lua C APIs"></a>2.2. Lua C APIs</h2><p>Lua提供了C APIs，方便Native层和Lua层之间的通讯。下面的Demo会用到这几个C API。</p>
+<ul>
+<li><p>lua_State *luaL_newstate (void);</p>
+<p>新建一个Lua的context。</p>
+</li>
+<li><p>int luaL_loadbuffer (lua_State *L, const char *buff, size_t sz, const char *name);</p>
+<p>编译一个Lua chunk。如果编译成功，它会把编译结果包装成一个函数，并把这个函数推入到栈中；否则，编译失败，它会把错误信息推入栈中。</p>
+<table>
+<thead>
+<tr>
+<th align="center">参数</th>
+<th align="center">类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">L</td>
+<td align="center">lua_State*</td>
+<td>Lua的context</td>
+</tr>
+<tr>
+<td align="center">buff</td>
+<td align="center">const char*</td>
+<td>需要加载的Lua脚本buffer</td>
+</tr>
+<tr>
+<td align="center">sz</td>
+<td align="center">size_t</td>
+<td>Lua脚本buffer的长度</td>
+</tr>
+<tr>
+<td align="center">name</td>
+<td align="center">const char*</td>
+<td>这个chunk的名称，可空</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>int lua_pcall (lua_State *L, int nargs, int nresults, int errfunc);</p>
+<p>以安全模式调用一个函数，即使抛出异常也不会崩溃。当抛出异常时，如果errfunc为0，Lua虚拟机会把错误信息推入到Lua虚拟栈中，如果errfunc不为0，则错误处理会交由Lua虚拟栈中索引为errfunc的函数处理。执行结束后，Lua虚拟机会把参数以及调用的函数从栈中弹出。</p>
+<table>
+<thead>
+<tr>
+<th align="center">参数</th>
+<th align="center">类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">L</td>
+<td align="center">lua_State*</td>
+<td>Lua的context</td>
+</tr>
+<tr>
+<td align="center">nargs</td>
+<td align="center">int</td>
+<td>需要调用的函数的参数个数</td>
+</tr>
+<tr>
+<td align="center">nresults</td>
+<td align="center">int</td>
+<td>需要调用的函数的返回结果个数</td>
+</tr>
+<tr>
+<td align="center">errfunc</td>
+<td align="center">int</td>
+<td>错误处理函数在Lua虚拟栈中的索引，如果为0，错误信息会推入到Lua虚拟栈中</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>void lua_getglobal (lua_State *L, const char *name);</p>
+<p>获取名字为name的全局变量，并推入栈中。</p>
+<table>
+<thead>
+<tr>
+<th align="center">参数</th>
+<th align="center">类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">L</td>
+<td align="center">lua_State*</td>
+<td>Lua的context</td>
+</tr>
+<tr>
+<td align="center">name</td>
+<td align="center">const char*</td>
+<td>变量名称</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>void lua_pushinteger (lua_State *L, lua_Integer n);</p>
+</li>
+<li><p>   推入一个lua_Integer类型的数据到栈中</p>
+<table>
+<thead>
+<tr>
+<th align="center">参数</th>
+<th align="center">类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">L</td>
+<td align="center">lua_State*</td>
+<td>Lua的context</td>
+</tr>
+<tr>
+<td align="center">n</td>
+<td align="center">lua_Integer</td>
+<td>需要推入的数字</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>lua_Integer lua_tointeger (lua_State *L, int index); </p>
+<p>将栈中的索引为index的元素转lua_Integer并返回</p>
+<table>
+<thead>
+<tr>
+<th align="center">参数</th>
+<th align="center">类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">L</td>
+<td align="center">lua_State*</td>
+<td>Lua的context</td>
+</tr>
+<tr>
+<td align="center">index</td>
+<td align="center">int</td>
+<td>指定元素在栈中的索引</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;除了这些C API，其他的介绍及其用法可以查看官网的<a href="https://www.lua.org/manual/5.1/manual.html#3.7">说明</a>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;通过理解Lua虚拟栈和了解一些Lua C API，我们就可以实现一个简单的Native层调用Lua层函数的功能。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">jint <span class="title function_">startScript</span><span class="params">(JNIEnv* env, jobject obj, jstring jLuaStr, jint a, jint b)</span> &#123;</span><br><span class="line">    <span class="comment">// 创建一个lua context</span></span><br><span class="line">    lua_State* luaContext = lua_newstate();</span><br><span class="line">    <span class="comment">// 初始化lua lib</span></span><br><span class="line">    luaL_openlibs(luaContext);</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>* cLuaStr = env-&gt;GetStringUTFChars(jLuaStr, <span class="literal">NULL</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 加载buff到内存</span></span><br><span class="line">    <span class="type">int</span> loadStatus = luaL_loadbuffer(luaContext, cLuaStr, <span class="built_in">strlen</span>(cLuaStr), <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (LUA_OK != loadStatus) &#123;</span><br><span class="line">        <span class="type">const</span> <span class="type">char</span> *szError = luaL_checkstring(luaContext, <span class="number">-1</span>);</span><br><span class="line">        Log_e(LOG_TAG, <span class="string">&quot;%s&quot;</span>, szError);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    env-&gt;ReleaseStringUTFChars(jLuaStr, cLuaStr);</span><br><span class="line">    <span class="type">int</span> callStatus = lua_pcall(luaContext, <span class="number">0</span>, LUA_MULTRET, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span> (LUA_OK != callStatus) &#123;</span><br><span class="line">        <span class="type">const</span> <span class="type">char</span> *szError = luaL_checkstring(luaContext, <span class="number">-1</span>);</span><br><span class="line">        Log_e(LOG_TAG, <span class="string">&quot;%s&quot;</span>, szError);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 获取test方法</span></span><br><span class="line">    lua_getglobal(luaContext, <span class="string">&quot;test&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (LUA_TFUNCTION != lua_type(luaContext, <span class="number">-1</span>)) &#123;</span><br><span class="line">        Log_d(LOG_TAG, <span class="string">&quot;can not found func : %s&quot;</span>, <span class="string">&quot;test&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 推入参数</span></span><br><span class="line">    lua_pushinteger(luaContext, a);</span><br><span class="line">    lua_pushinteger(luaContext, b);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 执行test方法</span></span><br><span class="line">    <span class="type">int</span> callTestStatus = lua_pcall(luaContext, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(LUA_OK == callTestStatus) &#123;</span><br><span class="line">        <span class="type">int</span> ret = lua_tointeger(luaContext, <span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">const</span> <span class="type">char</span>* errMsg = lua_tostring(luaContext, <span class="number">1</span>)</span><br><span class="line">        Log_e(LOG_TAG, <span class="string">&quot;%s&quot;</span>, errMsg);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;流程如注释。在这一个过程中，Lua虚拟栈的内容变化如图，从<strong>luaL_loadbuffer</strong>开始：</p>
+<img src="/AndroidLua/lua_stack_content_change.png" class="">
+<p>&nbsp;&nbsp;&nbsp;&nbsp;首先，经过luaL_loadbuffer之后，luaL_loadbuffer会把传过来的*.lua文件的buffer作为一个Lua Chunk，接着编译它。编译完后，把编译结果包装成一个function并推入Lua虚拟栈中。经过lua_pcall后，Lua虚拟机会把所执行的function及其参数从Lua虚拟栈中弹出。接着，通过lua_getglobal获取Lua层的全局变量「test」，lua_getglobal会把这个变量的值推入Lua虚拟栈中。函数已经准备好，再经过lua_pushinteger(a)和lua_pushinteger(b)后，函数和参数都已经顺序推入了，调用lua_pcall的先决条件已经满足。接下来，调用lua_pcall后，Lua虚拟机会根据调用lua_pcall是传入的nresults，将结果推入Lua虚拟栈中。最后，我们只需要lua_tointeger(index)来获取执行结果，返回给Android层即可。可以看到，自始至终，Lua虚拟栈充当一个数据交换的桥梁，是一个十分重要的角色。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;接下来，只需要在Native层Register一下NativeMethods，并在Android层声明一下native方法就可以使用了。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">LuaExecutor</span> &#123;</span><br><span class="line">    <span class="keyword">init</span> &#123;</span><br><span class="line">        System.loadLibrary(<span class="string">&quot;luabridge&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">external</span> <span class="function"><span class="keyword">fun</span> <span class="title">startScript</span><span class="params">(luaString: <span class="type">String</span>)</span></span>: <span class="built_in">Boolean</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;然而，上面的实现只有启动脚本的功能。在实际中，我们总不可能启动脚本之后，就没有对脚本执行流程有一点控制吧。因此有必要加一个停止脚本的功能。如何停止正在执行的脚本？先来看看Lua提供的C API：</p>
+<ul>
+<li><p>int luaL_error (lua_State *L, const char *fmt, …);</p>
+<p>   抛出一个异常，错误信息为fmt。</p>
+<table>
+<thead>
+<tr>
+<th align="center">参数</th>
+<th align="center">类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">L</td>
+<td align="center">lua_State*</td>
+<td>Lua的context</td>
+</tr>
+<tr>
+<td align="center">fmt</td>
+<td align="center">const char*</td>
+<td>错误信息</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>int lua_sethook (lua_State *L, lua_Hook f, int mask, int count);</p>
+<p>设置一个钩子函数。</p>
+<table>
+<thead>
+<tr>
+<th align="center">参数</th>
+<th align="center">类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">L</td>
+<td align="center">lua_State*</td>
+<td>Lua的context</td>
+</tr>
+<tr>
+<td align="center">f</td>
+<td align="center">lua_Hook</td>
+<td>钩子函数，包含需要执行的语句</td>
+</tr>
+<tr>
+<td align="center">mask</td>
+<td align="center">int</td>
+<td>指定被调用的时机，取值为常量LUA_MASKCALL，LUA_MASKRET，LUA_MASKLINE和LUA_MASKCOUNT的按位或。</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">mask取值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">LUA_MASKCALL</td>
+<td>代表钩子函数f会在进入任意函数后执行</td>
+</tr>
+<tr>
+<td align="center">LUA_MASKRET</td>
+<td>代表钩子函数在退出任意函数前执行</td>
+</tr>
+<tr>
+<td align="center">LUA_MASKLINE</td>
+<td>代表钩子函数f会在执行函数内一行代码前执行</td>
+</tr>
+<tr>
+<td align="center">LUA_MASKCOUNT</td>
+<td>代表钩子函数f会在lua解释器执行了count条指令后执行</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;有了这两个C API，脚本的停止功能就可以实现了：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">stopLuaHooker</span><span class="params">(lua_State *L, lua_Debug *ar)</span> &#123;</span><br><span class="line">    luaL_error(L, <span class="string">&quot;quit Lua&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">forceStopLua</span><span class="params">(lua_State *L)</span> &#123;</span><br><span class="line">    <span class="type">int</span> mask = LUA_MASKCOUNT;</span><br><span class="line">    lua_sethook(L, &amp;stopLuaHooker, mask, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;当我们调用forceStopLua时，会为Lua脚本的执行设置一个钩子函数，这个钩子函数的执行时机是：lua_sethook执行之后，Lua解释器执行完一条指令时。也就是说，我们在Lua层代码执行到任意地方时调用forceStopLua后，Lua解释器会在执行完一条指令后，接着执行stopLuaHooker，进而执行lua_error，抛出异常，脚本即终止。因此，脚本的启动和停止的功能已经实现好了，封到一个类里，叫做LuaEngine：</p>
+<figure class="highlight c"><figcaption><span>LuaEngine.h</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifndef</span> ANDROIDLUA_LUAENGINE_H</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ANDROIDLUA_LUAENGINE_H</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstring&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;jni.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;lua/lua.hpp&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;utils/Log.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;JniManager.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LOG_TAG <span class="string">&quot;LuaEngine&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LuaEngine</span> &#123;</span></span><br><span class="line">public:</span><br><span class="line">    LuaEngine();</span><br><span class="line"></span><br><span class="line">    virtual ~LuaEngine();</span><br><span class="line"></span><br><span class="line">    lua_State *<span class="title function_">getScriptContext</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> mScriptContext;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">bool</span> <span class="title function_">startScript</span><span class="params">(jstring jBuff, <span class="type">const</span> <span class="type">char</span> *functionName)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">bool</span> <span class="title function_">isScriptRunning</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> scriptRunning;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">bool</span> <span class="title function_">stopScript</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    lua_State *mScriptContext;</span><br><span class="line">    <span class="type">bool</span> scriptRunning;</span><br><span class="line"></span><br><span class="line">    <span class="type">bool</span> <span class="title function_">loadBuff</span><span class="params">(jstring jBuff)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">bool</span> <span class="title function_">runLuaFunction</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *functionName)</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">quitLuaThread</span><span class="params">(lua_State *L)</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">quitLuaThreadHooker</span><span class="params">(lua_State *L, lua_Debug *ar)</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">//ANDROIDLUA_LUAENGINE_H</span></span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><figcaption><span>LuaEngine.cpp</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;LuaEngine.h&quot;</span></span></span><br><span class="line"></span><br><span class="line">LuaEngine::LuaEngine() &#123;</span><br><span class="line">    mScriptContext = luaL_newstate();</span><br><span class="line">    scriptRunning = <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">LuaEngine::~LuaEngine() &#123;</span><br><span class="line">    <span class="keyword">if</span> (isScriptRunning()) &#123;</span><br><span class="line">        stopScript();</span><br><span class="line">    &#125;</span><br><span class="line">    mScriptContext = nullptr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">bool</span> <span class="title function_">LuaEngine::startScript</span><span class="params">(jstring jBuff, <span class="type">const</span> <span class="type">char</span> *functionName)</span> &#123;</span><br><span class="line">    scriptRunning = <span class="literal">true</span>;</span><br><span class="line">    luaL_openlibs(mScriptContext);</span><br><span class="line">    <span class="keyword">if</span> (this-&gt;loadBuff(jBuff)) &#123;</span><br><span class="line">        Log_d(LOG_TAG, <span class="string">&quot;script start running..&quot;</span>);</span><br><span class="line">        <span class="type">bool</span> success = this-&gt;runLuaFunction(functionName);</span><br><span class="line">        scriptRunning = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">return</span> success;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        scriptRunning = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">bool</span> <span class="title function_">LuaEngine::stopScript</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (scriptRunning) &#123;</span><br><span class="line">        quitLuaThread(mScriptContext);</span><br><span class="line">        scriptRunning = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Log_d(LOG_TAG, <span class="string">&quot;script is Not running&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">bool</span> <span class="title function_">LuaEngine::loadBuff</span><span class="params">(jstring jBuff)</span> &#123;</span><br><span class="line">    <span class="comment">// 读取buff</span></span><br><span class="line">    JNIEnv *env;</span><br><span class="line">    JniManager::getInstance()-&gt;getJvm()-&gt;GetEnv((<span class="type">void</span> **) &amp;env, JNI_VERSION_1_6);</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *cBuff = env-&gt;GetStringUTFChars(jBuff, nullptr);</span><br><span class="line">    <span class="keyword">if</span> (LUA_OK != luaL_loadbuffer(mScriptContext, cBuff, <span class="built_in">strlen</span>(cBuff), <span class="literal">NULL</span>)) &#123;</span><br><span class="line">        <span class="type">const</span> <span class="type">char</span> *szError = luaL_checkstring(mScriptContext, <span class="number">-1</span>);</span><br><span class="line">        Log_e(LOG_TAG, <span class="string">&quot;%s&quot;</span>, szError);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 加载buff到内存</span></span><br><span class="line">    <span class="keyword">if</span> (LUA_OK != lua_pcall(mScriptContext, <span class="number">0</span>, LUA_MULTRET, <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="type">const</span> <span class="type">char</span> *szError = luaL_checkstring(mScriptContext, <span class="number">-1</span>);</span><br><span class="line">        Log_e(LOG_TAG, <span class="string">&quot;%s&quot;</span>, szError);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    env-&gt;ReleaseStringUTFChars(jBuff, cBuff);</span><br><span class="line">    env-&gt;DeleteGlobalRef(jBuff);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">bool</span> <span class="title function_">LuaEngine::runLuaFunction</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *functionName)</span> &#123;</span><br><span class="line">    <span class="comment">// 获取errorFunc</span></span><br><span class="line">    <span class="comment">// 错误由__TRACKBACK__来处理，可以用来打印错误信息，</span></span><br><span class="line">    <span class="comment">// __TRACKBACK__函数需要自己定义在lua脚本中</span></span><br><span class="line">    lua_getglobal(mScriptContext, <span class="string">&quot;__TRACKBACK__&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (lua_type(mScriptContext, <span class="number">-1</span>) != LUA_TFUNCTION) &#123;</span><br><span class="line">        Log_d(LOG_TAG, <span class="string">&quot;can not found errorFunc : __TRACKBACK__&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">int</span> errfunc = lua_gettop(mScriptContext);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取指定的方法</span></span><br><span class="line">    lua_getglobal(mScriptContext, functionName);</span><br><span class="line">    <span class="keyword">if</span> (lua_type(mScriptContext, <span class="number">-1</span>) != LUA_TFUNCTION) &#123;</span><br><span class="line">        Log_d(LOG_TAG, <span class="string">&quot;can not found func : %s&quot;</span>, functionName);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 跑指定的方法</span></span><br><span class="line">    <span class="keyword">return</span> LUA_OK == lua_pcall(mScriptContext, <span class="number">0</span>, <span class="number">0</span>, errfunc);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">quitLuaThread</span><span class="params">(lua_State *L)</span> &#123;</span><br><span class="line">    <span class="type">int</span> mask = LUA_MASKCOUNT;</span><br><span class="line">    lua_sethook(L, &amp;quitLuaThreadHooker, mask, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">quitLuaThreadHooker</span><span class="params">(lua_State *L, lua_Debug *ar)</span> &#123;</span><br><span class="line">    luaL_error(L, <span class="string">&quot;quit Lua&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="3-Lua单向调用Android"><a href="#3-Lua单向调用Android" class="headerlink" title="3. Lua单向调用Android"></a>3. Lua单向调用Android</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;前面的实现，只允许Android层调用Lua的方法，而Lua层并不能调用Android层的方法。可不可以在Lua层调用Android层的方法？答案是可以的。一个思路是，Lua层调用Native层的方法，Native层再通过反射调用Android层的方法。先看看Lua层是怎么调用Native层的方法。Lua提供了一个C API：lua_register，它的原型是：</p>
+<ul>
+<li><p>void lua_register (lua_State *L, const char *name, lua_CFunction f);</p>
+<p>   注册一个CFunction。</p>
+<table>
+<thead>
+<tr>
+<th align="center">参数</th>
+<th align="center">类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">L</td>
+<td align="center">lua_State*</td>
+<td>Lua的context</td>
+</tr>
+<tr>
+<td align="center">name</td>
+<td align="center">const char*</td>
+<td>Lua层全局变量的名称</td>
+</tr>
+<tr>
+<td align="center">f</td>
+<td align="center">lua_CFunction</td>
+<td>C函数。原型是：int functionXXX(lua_State* L);其返回值的意义代表返回结果的个数。</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我们可以用这个C API实现Lua层调用Native层的方法：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">lua_register(mScriptContext, <span class="string">&quot;getString&quot;</span> , getString);</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">getString</span><span class="params">(lua_State *L)</span> &#123;</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *cStr = <span class="string">&quot;String From C Layer&quot;</span>;</span><br><span class="line">    lua_pushstring(L, cStr);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;上面的代码很简单，先注册一个名字为getString的全局变量，指向C函数getString。C函数getString中，先声明并分配一个字符串cStr，再把这个字符串推入到Lua栈中，并返回结果个数。因此，在Lua层，如果执行getString()，则会得到字符串”String From C Layer”，Lua层就可以调用Native层的方法了。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;然后看看Native层调用Android层的方法。代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">getString</span><span class="params">(lua_State *L)</span> &#123;</span><br><span class="line">    JNIEnv* env;</span><br><span class="line">    g_pJvm-&gt;GetEnv((<span class="type">void</span> **) &amp;env, JNI_VERSION_1_6);</span><br><span class="line">    </span><br><span class="line">    jclass clazz = env-&gt;FindClass(<span class="string">&quot;com/zspirytus/androidlua/shell/ShellBridge&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (!clazz) &#123;</span><br><span class="line">        Log_d(LOG_TAG, <span class="string">&quot;class not found!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    jmethodID methodId = env-&gt;GetStaticMethodID(clazz, <span class="string">&quot;getStringFromKotlinLayer&quot;</span>, <span class="string">&quot;()Ljava/lang/String;&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (!methodId) &#123;</span><br><span class="line">        Log_d(LOG_TAG, <span class="string">&quot;method %s not found!&quot;</span>, <span class="string">&quot;getStringFromStaticJavaMethod&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    jstring jStr = (jstring) env-&gt;CallStaticObjectMethod(clazz, methodId);</span><br><span class="line">    </span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *cStr = env-&gt;GetStringUTFChars(jStr, <span class="literal">NULL</span>);</span><br><span class="line">    lua_pushstring(L, cStr);</span><br><span class="line">    env-&gt;ReleaseStringUTFChars(jStr, cStr);</span><br><span class="line">    env-&gt;DeleteLocalRef(jStr);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;解释一下，首先通过在JNI_OnLoad保存下来的JavaVM指针指针获得Jni的环境变量，再用Jni的环境变量找到class和method，最后通过env、class和method反射调用Android层的方法获得返回的jstring，转成C-style的string后推入lua栈中，释放资源，并返回结果个数。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在Android层，留下一个方法以供调用：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Keep</span></span><br><span class="line"><span class="keyword">object</span> ShellBridge &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> TAG = ShellBridge.javaClass.simpleName</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Keep</span></span><br><span class="line">    <span class="meta">@JvmStatic</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">getStringFromKotlinLayer</span><span class="params">()</span></span>: String &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;String From Android Layer&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>至此，Android层与Lua层的交互已经实现了。</p>
+<h1 id="4-避免ANR"><a href="#4-避免ANR" class="headerlink" title="4. 避免ANR"></a>4. 避免ANR</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;然而上面的实现可能会导致ANR，原因在于Lua脚本的执行可能是耗时的。如果Lua脚本的执行时间超过5秒，必然ANR。一个解决方法是，把Lua脚本的执行放到子线程当中。这个子线程应当给Native层管理比较好，还是Android层管理比较好？我个人觉得放在Native层比较好，这样Android层就不需要专为执行Lua脚本而新建和管理线程，代码就不会太复杂；即使Native层的逻辑比较复杂，编好了so，一般就会当做一个库来使用，而不会去动它。所以，还是在Native层创建和管理线程。<br>pthread_create是Unix、Linux等系统创建线程的函数，它的原型是：</p>
+<ul>
+<li><p>int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void *), void *restrict arg);</p>
+<table>
+<thead>
+<tr>
+<th align="center">参数</th>
+<th align="center">类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">tidp</td>
+<td align="center">pthread_t *restrict</td>
+<td>线程ID</td>
+</tr>
+<tr>
+<td align="center">attr</td>
+<td align="center">const pthread_attr_t*restrict</td>
+<td>线程属性，默认为NULL</td>
+</tr>
+<tr>
+<td align="center">*(*start_rtn)(void *)</td>
+<td align="center">void</td>
+<td>运行在新线程的函数</td>
+</tr>
+<tr>
+<td align="center">*restrict arg</td>
+<td align="center">void</td>
+<td>start_rtn的所需参数</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;因此，我们可以把执行Lua脚本的逻辑移到新线程中：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">startWork</span><span class="params">()</span> &#123;</span><br><span class="line">    pthread_create(&amp;mThreadId, <span class="literal">NULL</span>, &amp;startWorkInner, (<span class="type">void</span>*)this);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">stopWork</span><span class="params">()</span> &#123;</span><br><span class="line">    stopScript();</span><br><span class="line">    mThreadId = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span>* <span class="title function_">startWorkInner</span><span class="params">(<span class="type">void</span> *args)</span> &#123;</span><br><span class="line">    startScript();</span><br><span class="line">    <span class="keyword">return</span> nullptr;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这样，startScript()就运行在新线程中，就不会有ANR的风险。我们把它封到一个类中，叫LuaTask，一次Lua脚本的开始与结束，都由这个类来管理。</p>
+<figure class="highlight c"><figcaption><span>LuaTask.h</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifndef</span> ANDROIDLUA_LUATASK_H</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ANDROIDLUA_LUATASK_H</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;jni.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;LuaEngine.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LuaTask</span> &#123;</span></span><br><span class="line"></span><br><span class="line">public:</span><br><span class="line">    LuaTask(jstring jBuff);</span><br><span class="line"></span><br><span class="line">    virtual ~LuaTask();</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> <span class="title function_">startWork</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> <span class="title function_">stopWork</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">bool</span> <span class="title function_">isRunning</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    <span class="type">static</span> <span class="type">void</span> *<span class="title function_">startWorkInner</span><span class="params">(<span class="type">void</span> *args)</span>;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    jstring mLuaBuff;</span><br><span class="line">    <span class="type">pthread_t</span> mThreadId;</span><br><span class="line">    LuaEngine *mLuaEngine;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">//ANDROIDLUA_LUATASK_H</span></span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><figcaption><span>LuaTask.cpp</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;LuaTask.h&quot;</span></span></span><br><span class="line"></span><br><span class="line">LuaTask::LuaTask(jstring jBuff) &#123;</span><br><span class="line">    mLuaBuff = jBuff;</span><br><span class="line">    mLuaEngine = new LuaEngine();</span><br><span class="line">    mThreadId = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">LuaTask::~LuaTask() &#123;</span><br><span class="line">    delete mLuaEngine;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">LuaTask::startWork</span><span class="params">()</span> &#123;</span><br><span class="line">    pthread_create(&amp;mThreadId, <span class="literal">NULL</span>, &amp;LuaTask::startWorkInner, (<span class="type">void</span>*)this);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">LuaTask::stopWork</span><span class="params">()</span> &#123;</span><br><span class="line">    mLuaEngine-&gt;stopScript();</span><br><span class="line">    mThreadId = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span>* <span class="title function_">LuaTask::startWorkInner</span><span class="params">(<span class="type">void</span> *args)</span> &#123;</span><br><span class="line">    LuaTask* task = (LuaTask*) args;</span><br><span class="line">    task-&gt;mLuaEngine-&gt;startScript(task-&gt;mLuaBuff, <span class="string">&quot;main&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> nullptr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">bool</span> <span class="title function_">LuaTask::isRunning</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> mThreadId != <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;但是，这是我们新创建的线程，还没有attach到JavaVM。如果没有attach到JavaVM，就会找不到JNIEnv，所以必须要attach到JavaVM，这样才能拿到JavaVM的JNI环境变量，从而可以调用到Android层的方法。因此startWorkInner要改进一下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span>* <span class="title function_">startWorkInner</span><span class="params">(<span class="type">void</span> *args)</span> &#123;</span><br><span class="line">    JNIEnv* env = nullptr;</span><br><span class="line">    JavaVMAttachArgs args&#123;JNI_VERSION_1_6, nullptr, nullptr&#125;;</span><br><span class="line">    g_pJvm-&gt;AttachCurrentThread(&amp;env, &amp;args);</span><br><span class="line">    startScript()</span><br><span class="line">    g_pJvm-&gt;DetachCurrentThread();</span><br><span class="line">    <span class="keyword">return</span> nullptr;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;线程退出之前，记得要和JavaVM detach一下，这样线程才能正常退出。</p>
+<h1 id="5-运行脚本包"><a href="#5-运行脚本包" class="headerlink" title="5. 运行脚本包"></a>5. 运行脚本包</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;至此，我们完成了能够随时开始、停止，出错能打印堆栈信息的执行Lua脚本功能。但实际上，我们不可能只跑单个脚本，并且脚本可能需要一些资源文件。因此我们一般会把脚本和资源文件打包成一个脚本包。在运行脚本之前，先解包，把脚本解析出来后再运行。<br>所以这个解析脚本的逻辑放在Native层还是Android层？我个人觉得放在Android层比较好。有两点原因：</p>
+<ol>
+<li>脚本包格式不确定，Native层不可能为每种情况进行适配，既然如此那就交由使用者来解析。</li>
+<li>单一职责的原则，Native层负责还是只负责一种功能比较好。而且为解析脚本包而重新编译一个so文件又太小题大做，所以解析的任务就交给使用者吧。</li>
+</ol>
+<p>既然提到脚本包，我就简单谈谈我的实现。我的实现是把lua脚本和资源文件一起压缩成一个zip文件，在zip文件中有一个config文件，里面写好了所有lua脚本的相对路径。在解析的时候，先在内存中把config解压出来，读出所有lua脚本的相对路径，然后在内存中把所有lua脚本文件都解压出来后，拼接起来，在交给Native层运行。至于资源文件，根据脚本的运行情况进行动态解压。我简单的封装了一下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">private external fun startScript(luaString: String): Boolean</span><br><span class="line">external fun stopScript(): Boolean</span><br><span class="line">external fun isScriptRunning(): Boolean</span><br><span class="line"></span><br><span class="line">fun runScriptPkg(scriptPkg: File, configFile: String) &#123;</span><br><span class="line">    mThreadPool?.execute &#123;</span><br><span class="line">        val start = System.currentTimeMillis()</span><br><span class="line">        initScriptPkg(scriptPkg)</span><br><span class="line">        val zipFile = ZipFile(scriptPkg)</span><br><span class="line">        val config = ZipFileUtils.getFileContentFromZipFile(zipFile, configFile)</span><br><span class="line">        val luaScriptPaths = config.split(&quot;\r\n&quot;)</span><br><span class="line">        val luaScript = ZipFileUtils.getFilesContentFromZipFile(zipFile, luaScriptPaths)</span><br><span class="line">        Log.d(&quot;USE_TIME&quot;, &quot;$&#123;System.currentTimeMillis() - start&#125; ms&quot;)</span><br><span class="line">        mHandler?.post &#123;</span><br><span class="line">            startScript(luaScript)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">object ZipFileUtils &#123;</span><br><span class="line"></span><br><span class="line">    fun getFileContentFromZipFile(zipFile: ZipFile, targetFile: String): String &#123;</span><br><span class="line">        var ins: InputStream? = null</span><br><span class="line">        try &#123;</span><br><span class="line">            val ze = zipFile.getEntry(targetFile)</span><br><span class="line">            return if (ze != null) &#123;</span><br><span class="line">                ins = zipFile.getInputStream(ze)</span><br><span class="line">                FileUtils.readInputStream(ins)</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                &quot;&quot;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            ins?.close()</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fun getFilesContentFromZipFile(zipFile: ZipFile, targetFiles: List&lt;String&gt;): String &#123;</span><br><span class="line">        val stringBuilder = StringBuilder()</span><br><span class="line">        targetFiles.filter &#123; it.isNotEmpty() and it.isNotBlank() &#125;.forEach &#123;</span><br><span class="line">            val content = getFileContentFromZipFile(zipFile, it)</span><br><span class="line">            stringBuilder.append(content).append(&#x27;\n&#x27;)</span><br><span class="line">        &#125;</span><br><span class="line">        return stringBuilder.toString()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">object FileUtils &#123;</span><br><span class="line"></span><br><span class="line">    fun readInputStream(ins: InputStream): String &#123;</span><br><span class="line">        return ins.bufferedReader().use(BufferedReader::readText)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;至此，我们在原有功能的基础上，增加了跑脚本包的功能。完整的代码可以看<a href="https://github.com/zkw012300/AndroidLua">这里</a>。</p>
+<h1 id="6-总结"><a href="#6-总结" class="headerlink" title="6. 总结"></a>6. 总结</h1><img src="/AndroidLua/Android_call_lua.png" class="">
+
+<img src="/AndroidLua/lua_call_android.png" class="">
+
+<h1 id="7-感想"><a href="#7-感想" class="headerlink" title="7. 感想"></a>7. 感想</h1><p>&nbsp;&nbsp;&nbsp;&nbsp;Android跑Lua脚本这个过程其实是很简单的，不是主要难点。这次主要卡住的地方是在JNI部分，因为我发现我所了解的C语言语法太古老了，跟不上现在的C语言。虽然我的C语言的代码量也不多，加上我对JNI的一些编程规范不太了解，所以一路磕磕绊绊，但是总算是写出来了。Kotlin和C&#x2F;C++还是要多熟悉熟悉，多练练。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/gson-analysis/" data-toggle="tooltip" data-placement="top" title="Gson原理分析">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/lua-impression/" data-toggle="tooltip" data-placement="top" title="Lua语言学习笔记">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/AndroidLua/";
+    var disqus_url = "https://spirytusz.co/AndroidLua/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

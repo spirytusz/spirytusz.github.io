@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          浅谈Kotlin协程(1) - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/kotlin-coroutine-context/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.webp')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Kotlin - Coroutine" title="Kotlin - Coroutine">Kotlin - Coroutine</a>
+                        
+                    </div>
+                    <h1>浅谈Kotlin协程(1)</h1>
+                    <h2 class="subheading">Kotlin协程上下文是什么</h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2022-08-15
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>我所理解的上下文是一种具有承上启下作用的对象，例如：对外获取资源，对内管理、分配资源。那么协程上下文的职责又是什么呢？本文是《深入理解Kotlin协程》的读书笔记之一，是我对Kotlin协程上下文的一些理解。</p>
+<h1 id="CoroutineContext是什么"><a href="#CoroutineContext是什么" class="headerlink" title="CoroutineContext是什么"></a>CoroutineContext是什么</h1><p>协程上下文定义在<code>kotlinx-coroutine-core</code>中：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">CoroutineContext</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;E : Element&gt;</span> <span class="title">get</span><span class="params">(key: <span class="type">Key</span>&lt;<span class="type">E</span>&gt;)</span></span>: E?</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;R&gt;</span> <span class="title">fold</span><span class="params">(initial: <span class="type">R</span>, operation: (<span class="type">R</span>, <span class="type">Element</span>) -&gt; <span class="type">R</span>)</span></span>: R</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="title">plus</span><span class="params">(context: <span class="type">CoroutineContext</span>)</span></span>: CoroutineContext = ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="title">minusKey</span><span class="params">(key: <span class="type">Key</span>&lt;*&gt;)</span></span>: CoroutineContext</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从<code>CoroutineContext</code>暴露的接口来看:</p>
+<ul>
+<li><code>CoroutineContext</code>重写了<code>[]</code>和<code>+</code>这两个操作符;</li>
+<li>支持根据给定的<code>Key</code>减去某个<code>CoroutineContext</code>;</li>
+<li>支持fold操作，将当前的<code>CoroutineContext</code>‘折叠’成类型为R的结果;</li>
+</ul>
+<p>这么看来似乎<code>CoroutineContext</code>更像一个容器类型，并且还引入了<code>Key</code>和<code>Element</code>这两个未知的概念。我们不妨继续看<code>CoroutineContext</code>还定义了什么：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">CoroutineContext</span> &#123;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Key</span>&lt;<span class="type">E : Element</span>&gt;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Element</span> : <span class="type">CoroutineContext</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">val</span> key: Key&lt;*&gt;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">override</span> <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;E : Element&gt;</span> <span class="title">get</span><span class="params">(key: <span class="type">Key</span>&lt;<span class="type">E</span>&gt;)</span></span>: E? =</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.key == key) <span class="keyword">this</span> <span class="keyword">as</span> E <span class="keyword">else</span> <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;R&gt;</span> <span class="title">fold</span><span class="params">(initial: <span class="type">R</span>, operation: (<span class="type">R</span>, <span class="type">Element</span>) -&gt; <span class="type">R</span>)</span></span>: R =</span><br><span class="line">            operation(initial, <span class="keyword">this</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">minusKey</span><span class="params">(key: <span class="type">Key</span>&lt;*&gt;)</span></span>: CoroutineContext =</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.key == key) EmptyCoroutineContext <span class="keyword">else</span> <span class="keyword">this</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面的代码可以看出：</p>
+<ul>
+<li>一个<code>Key</code>对应一个<code>Element</code>；</li>
+<li><code>Element</code>又实现了<code>CoroutineContext</code>；</li>
+</ul>
+<p>结合上面的信息，我对<code>CoroutineContext</code>就有了一个大致的印象：它是一个以<code>Key</code>为主键，以<code>Element</code>为值的集合。<br>但是有一点比较奇怪，哪有对象即是元素本身，也是一个集合的，这不是矛盾了吗？阅读了相关代码后，发现这并不矛盾，分情况讨论：</p>
+<h2 id="CoroutineContext是一个元素"><a href="#CoroutineContext是一个元素" class="headerlink" title="CoroutineContext是一个元素"></a>CoroutineContext是一个元素</h2><p>如果<code>CoroutineContext</code>是集合的一个元素，那这个<code>CoroutineContext</code>必然实现了<code>CoroutineContext.Element</code>接口。</p>
+<p>例如协程调度器<code>CoroutineDispatcher</code>、协程拦截器<code>ContinuationInterceptor</code>和协程名<code>CoroutineName</code>等；以协程名为例：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">data</span> <span class="keyword">class</span> <span class="title class_">CoroutineName</span>(</span><br><span class="line">    <span class="keyword">val</span> name: String</span><br><span class="line">) : AbstractCoroutineContextElement(CoroutineName) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">companion</span> <span class="keyword">object</span> Key : CoroutineContext.Key&lt;CoroutineName&gt;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">AbstractCoroutineContextElement</span>(</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">override</span> <span class="keyword">val</span> key: Key&lt;*&gt;</span><br><span class="line">) : Element &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 使用默认实现</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">    public override operator fun &lt;E : Element&gt; get(key: Key&lt;E&gt;): E? =</span></span><br><span class="line"><span class="comment">        if (this.key == key) this as E else null</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">    public override fun &lt;R&gt; fold(initial: R, operation: (R, Element) -&gt; R): R =</span></span><br><span class="line"><span class="comment">        operation(initial, this)</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">    public override fun minusKey(key: Key&lt;*&gt;): CoroutineContext =</span></span><br><span class="line"><span class="comment">        if (this.key == key) EmptyCoroutineContext else this</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了key以外，其他均使用了<code>Element</code>的默认实现。这很符合常识，毕竟此时的<code>CoroutineContext</code>是一个元素，只需要比较key，以决定进一步的操作。</p>
+<h2 id="CoroutineContext也是一个集合"><a href="#CoroutineContext也是一个集合" class="headerlink" title="CoroutineContext也是一个集合"></a>CoroutineContext也是一个集合</h2><p>如果<code>CoroutineContext</code>是一个集合，那它的实现必定是<code>CombinedContext</code>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="keyword">class</span> <span class="title class_">CombinedContext</span>(</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> left: CoroutineContext,</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> element: Element</span><br><span class="line">): CoroutineContext &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从定义来看，<code>CoroutineContext</code>类似于集合的递归定义，大致的结构如图所示：</p>
+<p><img src="/kotlin-coroutine-context/combined_context.drawio.png"></p>
+<p>既然是集合，必定重新实现了<code>CoroutineContext</code>关于集合修改的方法：</p>
+<h3 id="get方法"><a href="#get方法" class="headerlink" title="get方法"></a>get方法</h3><p>既然是一个集合，那很自然的就想到了线性查找。查看实现，确实如此，从右至左查找：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="keyword">class</span> <span class="title class_">CombinedContext</span>(...) &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;E : Element&gt;</span> <span class="title">get</span><span class="params">(key: <span class="type">Key</span>&lt;<span class="type">E</span>&gt;)</span></span>: E? &#123;</span><br><span class="line">        <span class="keyword">var</span> cur = <span class="keyword">this</span></span><br><span class="line">        <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">            cur.element[key]?.let &#123; <span class="keyword">return</span> it &#125;</span><br><span class="line">            <span class="keyword">val</span> next = cur.left</span><br><span class="line">            <span class="keyword">if</span> (next <span class="keyword">is</span> CombinedContext) &#123;</span><br><span class="line">                cur = next</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> next[key]</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/kotlin-coroutine-context/combined_context_get.drawio.png"></p>
+<h3 id="minusKey方法"><a href="#minusKey方法" class="headerlink" title="minusKey方法"></a>minusKey方法</h3><p>minusKey方法，顾名思义就是根据给定的<code>Key</code>删除集合中的对应元素。看代码会首先判断最右边的元素，如果key相同，则保留左支；否则在左支线性搜索。处理好做减法后集合不变和集合变空这两种边界情况，剩下的就是一般的情况——返回一个新的<code>CombinedContext</code>。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="keyword">class</span> <span class="title class_">CombinedContext</span>(...) &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">minusKey</span><span class="params">(key: <span class="type">Key</span>&lt;*&gt;)</span></span>: CoroutineContext &#123;</span><br><span class="line">        element[key]?.let &#123; <span class="keyword">return</span> left &#125;</span><br><span class="line">        <span class="keyword">val</span> newLeft = left.minusKey(key)</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">when</span> &#123;</span><br><span class="line">            newLeft === left -&gt; <span class="keyword">this</span></span><br><span class="line">            newLeft === EmptyCoroutineContext -&gt; element</span><br><span class="line">            <span class="keyword">else</span> -&gt; CombinedContext(newLeft, element)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/kotlin-coroutine-context/CombinedContext_minusKey.drawio.png"></p>
+<h3 id="plus方法"><a href="#plus方法" class="headerlink" title="plus方法"></a>plus方法</h3><p><code>CombinedContext</code>并没有重写plus方法，而是使用了<code>CoroutineContext</code>的默认实现。因为要保证拦截器处于上下文的最右边以方便快速取到拦截器，所以默认实现稍显复杂。</p>
+<p>虽然plus方法较为复杂，但其本质还是重写了<code>+</code>操作符。<code>+</code>操作符的左右边都是<code>CorouinteContext</code>，可以是<code>CoroutineContext.Element</code>和<code>CombinedContext</code>。因为加法是从左至右的，所以分为三种情况（使用<code>[]</code>代表<code>CombinedContext</code>，最右边即为element字段）：</p>
+<h4 id="存在空集合EmptyCoroutineContext"><a href="#存在空集合EmptyCoroutineContext" class="headerlink" title="存在空集合EmptyCoroutineContext"></a>存在空集合EmptyCoroutineContext</h4><p><img src="/kotlin-coroutine-context/CombinedContext_plus_desc.drawio.png"></p>
+<h4 id="Element-Element"><a href="#Element-Element" class="headerlink" title="Element + Element"></a>Element + Element</h4><p><img src="/kotlin-coroutine-context/CombinedContext_plus_desc_2.drawio.png"></p>
+<p>因为一个上下文中拦截器有且仅有一个，所以默认实现是后来的覆盖前面的（情况③），且拦截器必定在上下文的最右边。</p>
+<h4 id="CombinedContext-Element"><a href="#CombinedContext-Element" class="headerlink" title="CombinedContext + Element"></a>CombinedContext + Element</h4><p><img src="/kotlin-coroutine-context/CombinedContext_plus_desc_3.drawio.png"></p>
+<p>拦截器的覆盖如情况⑤，结果也必定是拦截器在最右边。</p>
+<h2 id="CoroutineContext结构既是List也是Map"><a href="#CoroutineContext结构既是List也是Map" class="headerlink" title="CoroutineContext结构既是List也是Map"></a>CoroutineContext结构既是List也是Map</h2><p><code>CoroutineContext</code>既像List一样具有线性接口，也能像Map一样根据key来获取对应的value。为什么这么设计？</p>
+<ul>
+<li>如果<code>CoroutineContext</code>只是一个List，我们需要获取对应的类型的上下文时，需要通过index线性查找，最后再通过泛型进行强转；<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> elements: List&lt;Element&gt;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;<span class="keyword">reified</span> E: Element&gt;</span> <span class="title">get</span><span class="params">()</span></span>: E? &#123;</span><br><span class="line">    <span class="keyword">return</span> elements.find &#123; it <span class="keyword">is</span> E &#125; <span class="keyword">as</span>? E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>如果<code>CoroutineContext</code>只是一个Map，我们需要在获取对应类型的上下文后，手动再进行强转；<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> elementMap: Map&lt;Key&lt;<span class="keyword">out</span> Element&gt;, Element&gt;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">get</span><span class="params">(key: <span class="type">Key</span>&lt;<span class="type">out</span> <span class="type">Element</span>&gt;)</span></span>: Element? &#123;</span><br><span class="line">      <span class="keyword">return</span> elementMap[key]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 这么调用</span></span><br><span class="line"><span class="keyword">val</span> coroutineDispatcher = </span><br><span class="line">    coroutineContext[CoroutineDispatcher] <span class="keyword">as</span>? CoroutineDispatcher</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>但如果结合List和Map的特点，上面两个问题便迎刃而解。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p><code>CoroutineContext</code>既可以是集合的元素，也可以是集合本身，其表现形式分别是<code>CoroutineContext.Element</code>和<code>CombinedContext</code>。类图如下：</p>
+<p><img src="/kotlin-coroutine-context/CoroutineContext_UML.drawio.png"></p>
+<p>同时，为了方便搜索，<code>CoroutineContext</code>被设计成了Indexed Sets的数据结构——既有List的线性结构，也有Map的键值对结构。</p>
+<h1 id="CoroutineContext的元素"><a href="#CoroutineContext的元素" class="headerlink" title="CoroutineContext的元素"></a>CoroutineContext的元素</h1><p>阅读完上文，我们知道原来<code>CoroutineContext</code>是一个线性键值对集合结构，那这个集合必定有多种元素。主要的元素与<code>CoroutineContext</code>的关系如下：<br><img src="/kotlin-coroutine-context/CoroutineContext_Elements.drawio.png"></p>
+<h2 id="ContinuationInterceptor"><a href="#ContinuationInterceptor" class="headerlink" title="ContinuationInterceptor"></a>ContinuationInterceptor</h2><p><code>CoroutineContext</code>的元素有协程拦截器：<code>ContinuationInterceptor</code>。顾名思义，协程拦截器是是用于拦截协程的。如果你对协程有大致的了解，就会知道Kotlin协程本质还是回调，其表现形式就是<code>Continuation</code>:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Continuation</span>&lt;<span class="type">in T</span>&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">val</span> context: CoroutineContext</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;)</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的resumeWith就是成功接口和失败接口的合体，当协程从挂起转向恢复状态的时候会调用这个方法。而协程拦截器的本质就是Wrapper模式：将旧有的<code>Continuation</code>包装成新的<code>Continuation</code>:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ContinuationInterceptor</span> : <span class="type">CoroutineContext.Element</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">interceptContinuation</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        continuation: <span class="type">Continuation</span>&lt;<span class="type">T</span>&gt;</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: Continuation&lt;T&gt;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种Wrapper模式可以帮我们做很多事，比如在协程恢复的时候切换线程：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ContinuationInterceptorImpl</span>&lt;<span class="type">T</span>&gt;(</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> delegate: Continuation&lt;T&gt;</span><br><span class="line">) : ContinuationInterceptor &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">interceptContinuation</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        continuation: <span class="type">Continuation</span>&lt;<span class="type">T</span>&gt;</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: Continuation&lt;T&gt; &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">object</span>: Continuation&lt;T&gt; &#123;</span><br><span class="line">            <span class="keyword">override</span> <span class="keyword">val</span> context: CoroutineContext = delegate.context</span><br><span class="line"></span><br><span class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;)</span></span> &#123;</span><br><span class="line">                thread &#123; </span><br><span class="line">                    delegate.resumeWith(result)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Kotlin的协程已经帮我们实现好了——协程调度器<code>CoroutineDispatcher</code></p>
+<h2 id="CoroutineDispatcher"><a href="#CoroutineDispatcher" class="headerlink" title="CoroutineDispatcher"></a>CoroutineDispatcher</h2><p><code>CoroutineDispatcher</code>是协程调度器，它会在协程恢复时决定要不要切换线程和切换到哪个线程执行。其原理如上所描述，在协程恢复时决定是否帮我们切线程和切哪个线程：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">CoroutineDispatcher</span> : <span class="type">...</span>, <span class="type">ContinuationInterceptor</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">interceptContinuation</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        continuation: <span class="type">Continuation</span>&lt;<span class="type">T</span>&gt;</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: Continuation&lt;T&gt; = DispatchedContinuation(<span class="keyword">this</span>, continuation)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="function"><span class="keyword">fun</span> <span class="title">dispatch</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        context: <span class="type">CoroutineContext</span>, </span></span></span><br><span class="line"><span class="params"><span class="function">        block: <span class="type">Runnable</span></span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">internal</span> <span class="keyword">class</span> <span class="title class_">DispatchedContinuation</span>&lt;<span class="type">in T</span>&gt;(</span><br><span class="line">    <span class="keyword">val</span> dispatcher: CoroutineDispatcher,</span><br><span class="line">    <span class="keyword">val</span> continuation: Continuation&lt;T&gt;</span><br><span class="line">): ..., Continuation&lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;)</span></span> &#123;</span><br><span class="line">        <span class="keyword">val</span> context = continuation.context</span><br><span class="line">        <span class="keyword">if</span> (dispatcher.isDispatchNeeded(context)) &#123;</span><br><span class="line">            dispatcher.dispatch(context, <span class="keyword">this</span>)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            continuation.resumeWith(result)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到<code>CoroutineDispatcher</code>实现了协程拦截器，在拦截协程时，<code>interceptContinuation</code>返回了一个<code>DispatchedContinuation</code>，本质还是Wrapper模式：</p>
+<p>在恢复的时候，检查是否需要切线程，即<code>CoroutineDispatcher.isDispatchNeeded</code>，如果需要就调用<code>CoroutineDispatcher.dispatch</code>切换，否则就直接恢复协程。</p>
+<p>Kotlin协程已经内置好了多个协程调度器，供开发者使用：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">actual</span> <span class="keyword">object</span> Dispatchers &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@JvmStatic</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">actual</span> <span class="keyword">val</span> Default: CoroutineDispatcher = DefaultScheduler</span><br><span class="line"></span><br><span class="line">    <span class="meta">@JvmStatic</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">actual</span> <span class="keyword">val</span> Main: MainCoroutineDispatcher <span class="keyword">get</span>() = MainDispatcherLoader.dispatcher</span><br><span class="line"></span><br><span class="line">    <span class="meta">@JvmStatic</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">actual</span> <span class="keyword">val</span> Unconfined: CoroutineDispatcher = kotlinx.coroutines.Unconfined</span><br><span class="line"></span><br><span class="line">    <span class="meta">@JvmStatic</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">val</span> IO: CoroutineDispatcher = DefaultIoScheduler</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>调度器</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dispatchers.Main</td>
+<td>主线程调度器，协程恢复时切换到主线程</td>
+</tr>
+<tr>
+<td>Dispatchers.Default</td>
+<td>默认调度器，协程恢复时切换到默认线程池的线程</td>
+</tr>
+<tr>
+<td>Dispatchers.IO</td>
+<td>IO线程调度器，协程恢复时切换到IO线程池的线程</td>
+</tr>
+<tr>
+<td>Dispatchers.Unconfined</td>
+<td>协程恢复发起方在哪个线程，协程恢复时就在哪个线程执行</td>
+</tr>
+</tbody></table>
+<h2 id="Job"><a href="#Job" class="headerlink" title="Job"></a>Job</h2><p><code>Job</code>也是协程上下文之一，用于描述协程执行状态、层级关系的一类上下文：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Job</span> : <span class="type">CoroutineContext.Element</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">val</span> isActive: <span class="built_in">Boolean</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">val</span> isCompleted: <span class="built_in">Boolean</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">val</span> isCancelled: <span class="built_in">Boolean</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="title">start</span><span class="params">()</span></span>: <span class="built_in">Boolean</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="title">cancel</span><span class="params">(cause: <span class="type">CancellationException</span>? = <span class="literal">null</span>)</span></span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">val</span> children: Sequence&lt;Job&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>start和cancel用于扭转协程的状态；</li>
+<li>isActive，isCompleted，isCancelled用于描述协程的状态；</li>
+<li>children用于描述层级关系，即协程的父子关系；</li>
+</ul>
+<h1 id="CoroutineContext的本质"><a href="#CoroutineContext的本质" class="headerlink" title="CoroutineContext的本质"></a>CoroutineContext的本质</h1><p>我所理解的<code>CoroutineContext</code>，其本质就是“全局”的公共集合，作为协程执行过程中一些必要元素的存取容器：</p>
+<ul>
+<li>协程（挂起后）恢复时，用<code>CoroutineDispatcher</code>把线程环境切回来；</li>
+<li>协程完成、取消或异常了，用<code>Job</code>来扭转协程的状态，并根据父子协程的关系传递事件或者异常；</li>
+<li>协程执行的过程中出现异常了，使用<code>CoroutineExceptionHanlder</code>来处理；</li>
+<li>为了方便追踪，用<code>CoroutineName</code>给协程起个名字；</li>
+</ul>
+<p>而这个“全局”，即为作用域：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">CoroutineScope</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">val</span> coroutineContext: CoroutineContext</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果脱离作用域来启动一个协程，相当于这个协程没有了上下文，也就丧失了上面所说的几种能力。</p>
+<p>所以标准库中定义的启动协程函数，是以<code>CoroutineScope</code>为receiver的：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> CoroutineScope.<span class="title">launch</span><span class="params">(...)</span></span>: Job &#123; ... &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> CoroutineScope.<span class="title">async</span><span class="params">(...)</span></span>: Deferred&lt;T&gt; &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以，<code>CoroutineContext</code>的职责为：在作用域下提供协程执行过程中存取必要元素的能力。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><code>CoroutineContext</code>是一个Indexed Set的数据结构，既有List的线性结构，也有Map的键值对结构。</p>
+<p>每个协程作用域都有一个<code>CoroutineContext</code>，它为协程执行的过程中提供一个存取必要元素的容器。</p>
+<p>这些元素服务于协程的执行——有负责在挂起后恢复时切换线程环境的<code>CoroutineDispatcher</code>，也有描述协程执行状态与层级结构的<code>Job</code>，也有负责处理协程执行过程中出现的异常的<code>CoroutineExceptionHandler</code>，等等。</p>
+<p>其本质就是作用域下公共元素的存储集合。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/kotlin-coroutine-launch/" data-toggle="tooltip" data-placement="top" title="浅谈Kotlin协程(2)">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/multi-project-aggregation/" data-toggle="tooltip" data-placement="top" title="巧用Gradle缓存机制">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/kotlin-coroutine-context/";
+    var disqus_url = "https://spirytusz.co/kotlin-coroutine-context/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

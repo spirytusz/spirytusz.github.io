@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          Synchronized的正确食用方法 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/synchronizedObjects/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('synchronized_objects_cover.jpeg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Java" title="Java">Java</a>
+                        
+                          <a class="tag" href="/tags/#多线程" title="多线程">多线程</a>
+                        
+                    </div>
+                    <h1>Synchronized的正确食用方法</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by spirytusz on
+                        2018-07-18
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>前面的博客<a href="http://www.zspirytus.com/2018/07/13/aboutSynchronized/">《浅谈synchronized的实现原理》</a>谈到synchronized的实现原理，简单而言就是锁住了对象。但是似乎还比较抽象，本篇博客将解决：</p>
+<ul>
+<li>synchronized锁住的是哪个对象？</li>
+<li>如何合理使用synchronized？<br>那么开始吧。</li>
+</ul>
+<span id="more"></span>
+
+<h2 id="一、synchronized的两种用法"><a href="#一、synchronized的两种用法" class="headerlink" title="一、synchronized的两种用法"></a>一、synchronized的两种用法</h2><p>synchronized有两种基本用法说起，分别是同步语句块和同步方法。</p>
+<h3 id="1-1-同步语句块"><a href="#1-1-同步语句块" class="headerlink" title="1.1.同步语句块"></a>1.1.同步语句块</h3><p>同步语句块是指被synchronized修饰的语句块，被synchronized修饰的语句块，被多个线程执行的过程是互斥的。同步语句块的写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">synchronizedStatement</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (obj)&#123;</span><br><span class="line">        <span class="comment">//do Something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同步语句块锁住的是括号中的对象，上例中锁住的是obj。这个例子是可以编译通过并且正常运行的，说明synchronized能够锁住<em>任意对象</em>。我们可以粗略的把<em>任意对象</em>分为<em>本类的实例对象</em>、<em>本类的类对象</em>以及其他普通对象。</p>
+<h4 id="1-1-1-本类的实例对象"><a href="#1-1-1-本类的实例对象" class="headerlink" title="1.1.1.本类的实例对象"></a>1.1.1.本类的实例对象</h4><p>demo：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">synchronizedStatement</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="built_in">this</span>)&#123;</span><br><span class="line">        <span class="comment">//do Something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里，synchronized锁住的是<em>本类的实例对象</em>，需要注意的是：除非本类是单例，否则本类的实例对象在内存中是可以存在有多个的。</p>
+<h4 id="1-1-2-本类的类对象"><a href="#1-1-2-本类的类对象" class="headerlink" title="1.1.2.本类的类对象"></a>1.1.2.本类的类对象</h4><p>demo：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">synchronizedStatement</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (SomeClass.class)&#123;</span><br><span class="line">        <span class="comment">// do Something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里，synchronized锁住的是<em>本类的类对象</em>，对象SomeClass.class的类型是Class，本类的类对象在内存中<em>有且仅有一个</em>，因此可以把它看做是单例的。</p>
+<h4 id="1-1-3-其他普通对象"><a href="#1-1-3-其他普通对象" class="headerlink" title="1.1.3.其他普通对象"></a>1.1.3.其他普通对象</h4><p>demo：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">synchronizedStatement</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (obj)&#123;</span><br><span class="line">        <span class="comment">// do Something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里synchronized锁住的是除了以上提到的任意对象。这个对象的类型可以是HashMap、Integer等API自带类型，也可以是自己编写的类的实例对象、类对象等等。</p>
+<h3 id="1-2-同步方法"><a href="#1-2-同步方法" class="headerlink" title="1.2.同步方法"></a>1.2.同步方法</h3><p>同步方法是指被synchronized修饰的方法，同步方法使得多个线程调用该方法的过程是互斥的。同步方法可以分为静态同步方法和非静态同步方法，锁住的对象是不同的。普通的同步方法锁住的对象是<em>本类的实例对象</em>；而静态同步方法锁住的对象是<em>本类的类对象</em>。以下是两种同步方法的写法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Static Synchronized Method</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">staticSynchronizedMethod</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Synchronized Method</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">synchronizedMethod</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="二、同步方法和同步语句块的联系"><a href="#二、同步方法和同步语句块的联系" class="headerlink" title="二、同步方法和同步语句块的联系"></a>二、同步方法和同步语句块的联系</h2><p>从上面的解释可以看出，同步方法和同步语句块存在一些联系。事实上，从被锁住的对象的角度来看，synchronized(this)和同步方法是等价的；synchronized(SomeClass.class)和静态同步方法是等价的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//下面两种同步是等价的</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">synchronizedMethod</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="built_in">this</span>)&#123;</span><br><span class="line">        <span class="comment">// do something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//下面两种同步是等价的</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">addByMethod</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (SomeClass.class)&#123;</span><br><span class="line">        <span class="comment">// do something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="三、同步与死锁"><a href="#三、同步与死锁" class="headerlink" title="三、同步与死锁"></a>三、同步与死锁</h2><p>同步是互斥的，我们可以简单的认为：我在用，其他人不能用；其他人在用，我不能用。一个经典的例子是：<del>哲♂学家</del>哲学家进餐问题。哲学家问题描述的是经过一系列同步操作后引发死锁的悲剧。因此同步可能会把我们往危险的陷阱——死锁那里带，在同步时我们必须要考虑死锁的情况。</p>
+<h2 id="四、考虑死锁的情况"><a href="#四、考虑死锁的情况" class="headerlink" title="四、考虑死锁的情况"></a>四、考虑死锁的情况</h2><h3 id="4-1-synchronized可能发生死锁吗？"><a href="#4-1-synchronized可能发生死锁吗？" class="headerlink" title="4.1.synchronized可能发生死锁吗？"></a>4.1.synchronized可能发生死锁吗？</h3><p>synchronized锁是同步锁，它能够使得共享数据被多个线程操作前后保持数据一致性。既然是共享数据，就有可能会发生死锁。死锁发生的必要条件是：</p>
+<blockquote><ul>
+<li>互斥条件：进程对所分配到的资源进行排他性使用，即在一段时间内某资源只由一个进程占用。如果此时还有其他进程请求该资源，则请求者只能等待，直至占有该资源的进程用毕释放。</li>
+<li>请求和保持条件：进程已经保持了至少一个资源，但又提出了新的资源请求，而该资源又已被其他进程占有，此时请求进程阻塞，但又对自己已获得的其他资源保持不放。</li>
+<li>不剥夺条件：进程已获得的资源，在未使用完成之前，不能被剥夺，只能在使用完毕由其释放。</li>
+<li>环路等待条件：在发生死锁时，必然存在一个进程–资源的环形链，即进程集合P&#x3D;{P<sub>1</sub>,P<sub>2</sub>,… …,P<sub>n</sub>}中的P<sub>1</sub>等待P<sub>2</sub>的资源，P<sub>2</sub>等待P<sub>3</sub>的资源,… …,P<sub>n</sub>等待P<sub>1</sub>的资源。</li>
+</ul>
+<footer><strong>-</strong><cite><a href="https://book.douban.com/subject/26079463/">《计算机操作系统》</a></cite></footer></blockquote>
+<p>结合synchronized，我们分别考虑这四个条件：<br>1.对于互斥条件：synchronized是同步锁，多个线程竞争执行同步代码时，有且仅有一个线程获得锁，因此互斥条件是必然满足的。<br>2.对于请求和保持条件：因为同步方法和同步语句块原理相同，因此在这里考虑同步语句块。请求和保持，意味着每一个线程至少需要两个不同的锁，即同步语句块中嵌入同步语句块，并且锁的对象是不同的，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span>(object_1)&#123;</span><br><span class="line">    <span class="keyword">synchronized</span>(object_2)&#123;</span><br><span class="line">        <span class="comment">// do something synchronized or obtain other monitor lock</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这个例子中，如果线程获得object_1的对象锁，但是因object_2的对象锁被其他线程持有，因此它会被阻塞并保持持有object_1的对象锁。因此，请求和保持条件是可满足的。<br>3.不剥夺条件：如请求保持条件，直到线程获取全部需要的对象锁并执行完同步语句块，它是不会释放它获得的锁的。synchronized并没有强制剥夺某一个线程拥有锁的机制，因此，在没有人为的情况下，不剥夺条件必然满足。<br>4.假设请求和保持条件满足，并结合互斥条件和不剥夺条件。对于环路等待条件满足的情况下，情况就会这这样的，线程们都获得了至少一个锁并且都保持，并且任意一个线程，需要其他线程已经获得的锁（请求保持）。于是大家都和和气气地（不剥夺条件）互相等待。然后就成环了。接下来看一段简单的代码，这段代码实现的是线程t<sub>1</sub>和t<sub>2</sub>共同竞争object_1和object_2的对象锁。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.concurrent.TimeUnit;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DeadLockTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">THREAD_1</span> <span class="operator">=</span> <span class="string">&quot;Thread 1&quot;</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">THREAD_2</span> <span class="operator">=</span> <span class="string">&quot;Thread 2&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">Object</span> <span class="variable">object_1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line">    <span class="keyword">private</span> <span class="type">Object</span> <span class="variable">object_2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">methodA</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException, IllegalMonitorStateException &#123;</span><br><span class="line">        Logcat(<span class="string">&quot;try to get object_1&#x27;s lock!&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">synchronized</span> (object_1) &#123;</span><br><span class="line">            Logcat(<span class="string">&quot;get object_1&#x27;s lock!&quot;</span>);</span><br><span class="line">            Logcat(<span class="string">&quot;Sleeping ... ...&quot;</span>);</span><br><span class="line">            TimeUnit.SECONDS.sleep(<span class="number">2</span>);</span><br><span class="line">            Logcat(<span class="string">&quot;wake up! try to get object_2&#x27;s lock!&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">synchronized</span> (object_2) &#123;</span><br><span class="line">                Logcat(<span class="string">&quot;get object_2&#x27;s lock!&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">methodB</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException, IllegalMonitorStateException &#123;</span><br><span class="line">        Logcat(<span class="string">&quot;try to get object_2&#x27;s lock!&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">synchronized</span> (object_2) &#123;</span><br><span class="line">            Logcat(<span class="string">&quot;get object_2&#x27;s lock!&quot;</span>);</span><br><span class="line">            Logcat(<span class="string">&quot;try to get object_1&#x27;s lock!&quot;</span>);</span><br><span class="line">            <span class="keyword">synchronized</span> (object_1) &#123;</span><br><span class="line">                Logcat(<span class="string">&quot;get object_1&#x27;s lock!&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">Logcat</span><span class="params">(String message)</span> &#123;</span><br><span class="line">        System.out.println(Thread.currentThread().getName() + <span class="string">&quot;: &quot;</span> + message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">DeadLockTest</span> <span class="variable">deadLockTest</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DeadLockTest</span>();</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">t1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                deadLockTest.methodA();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (IllegalMonitorStateException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">t2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                deadLockTest.methodB();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (IllegalMonitorStateException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        t1.setName(THREAD_1);</span><br><span class="line">        t2.setName(THREAD_2);</span><br><span class="line">        t1.start();</span><br><span class="line">        t2.start();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            t1.join();</span><br><span class="line">            t2.join();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">        Logcat(<span class="string">&quot;Finish Successfully!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Output:</span></span><br><span class="line"><span class="comment">// Thread 1: try to get object_1&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 1: get object_1&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 1: Sleeping ... ...</span></span><br><span class="line"><span class="comment">// Thread 2: try to get object_2&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 2: get object_2&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 2: try to get object_1&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 1: wake up! try to get object_2&#x27;s lock!</span></span><br></pre></td></tr></table></figure>
+<p>这段代码大概率会出现死锁。发生死锁时，输出如62~68行。代码的执行顺序是不确定的，但是从这个例子的输出来看，要发生死锁，必然存在子顺序：<br>1.t<sub>1</sub>获得object_1的对象锁<br>2.t<sub>2</sub>获得object_2的对象锁<br>3.JVM去执行其他调度，这里就用休眠操作来模拟<br>4.t<sub>1</sub>尝试获取object_2的对象锁，但已被占用，阻塞。<br>5.t<sub>2</sub>尝试获取object_1的对象锁，但已被占用，阻塞。<br>这里就是环路等待的情况了！t<sub>1</sub>等t<sub>2</sub>，t<sub>2</sub>等t<sub>1</sub>，除非人为干预，否则永远持续。<br>从上面来看，使用synchronized是有可能发生死锁的！因为四个条件的合取并不恒为假。因此在使用时要慎重考虑，因为一旦发生死锁，程序就死掉。</p>
+<h3 id="4-2-死锁的避免"><a href="#4-2-死锁的避免" class="headerlink" title="4.2.死锁的避免"></a>4.2.死锁的避免</h3><p>死锁的发生是有条件的。为了避免发生死锁，我们只需要破坏条件，使其不满足即可。分别考虑四个条件：<br>1.互斥条件。互斥条件必然满足的，破坏是不可能破坏的。<br>2.请求等待条件、不剥夺条件和环路等待条件互相配合。在请求等待时，线程至少持有一个对象锁。如果发生死锁时，通过破坏不剥夺条件和环路等待条件，有不多于[线程个数 - 共享资源个数]个线程主动释放当前持有的锁，那么尴尬的局面就可以缓解。为什么是不多于[线程个数 - 共享资源个数]个线程而不是全部线程？以<del>哲♂学家</del>哲学家进餐问题为例，考虑情况：所有哲学家都饿了，然后他们同时拿到左边的筷子。这个时候他们同时wait()，放下左边的筷子(释放资源)，并等待通知其他哲学家用完的通知(notify())。然而，从上帝视角来看，情况是这样的：所有哲学家先同时拿起左边的筷子，然后发现不对，然后全部放下左边的筷子，然后等，最后饿死。<br>这里的线程个数为2，共享资源个数为1，因为对于任意两个相邻的哲学家，他们会竞争1根筷子。因此，在这个例子中，当发生死锁时，任意一对相邻的哲学家，只要有[2 - 1]个哲学家放弃筷子，这时候死锁就能解除。因此，上面会发生死锁的代码可以如下改进：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.concurrent.TimeUnit;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DeadLockTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">THREAD_1</span> <span class="operator">=</span> <span class="string">&quot;Thread 1&quot;</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">THREAD_2</span> <span class="operator">=</span> <span class="string">&quot;Thread 2&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">Object</span> <span class="variable">object_1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line">    <span class="keyword">private</span> <span class="type">Object</span> <span class="variable">object_2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">boolean</span> <span class="variable">isObject1Locked</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">boolean</span> <span class="variable">isObject2Wait</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">methodA</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException, IllegalMonitorStateException &#123;</span><br><span class="line">        Logcat(<span class="string">&quot;try to get object_1&#x27;s lock!&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">synchronized</span> (object_1) &#123;</span><br><span class="line">            isObject1Locked = <span class="literal">true</span>;</span><br><span class="line">            Logcat(<span class="string">&quot;get object_1&#x27;s lock!&quot;</span>);</span><br><span class="line">            Logcat(<span class="string">&quot;Sleeping ... ...&quot;</span>);</span><br><span class="line">            TimeUnit.SECONDS.sleep(<span class="number">2</span>);</span><br><span class="line">            Logcat(<span class="string">&quot;wake up! try to get object_2&#x27;s lock!&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">synchronized</span> (object_2) &#123;</span><br><span class="line">                Logcat(<span class="string">&quot;get object_2&#x27;s lock!&quot;</span>);</span><br><span class="line">                <span class="keyword">if</span> (isObject2Wait) &#123;</span><br><span class="line">                    Logcat(<span class="string">&quot;I will finish, notify!&quot;</span>);</span><br><span class="line">                    object_2.notify();</span><br><span class="line">                    isObject2Wait = <span class="literal">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        isObject1Locked = <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">methodB</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException, IllegalMonitorStateException &#123;</span><br><span class="line">        Logcat(<span class="string">&quot;try to get object_2&#x27;s lock!&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">synchronized</span> (object_2) &#123;</span><br><span class="line">            Logcat(<span class="string">&quot;get object_2&#x27;s lock!&quot;</span>);</span><br><span class="line">            Logcat(<span class="string">&quot;try to get object_1&#x27;s lock!&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span> (isObject1Locked) &#123;</span><br><span class="line">                isObject2Wait = <span class="literal">true</span>;</span><br><span class="line">                object_2.wait();</span><br><span class="line">                Logcat(<span class="string">&quot;Fortunately, object_1 is locked, release object_2&#x27;s lock and wait!&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">synchronized</span> (object_1) &#123;</span><br><span class="line">                isObject1Locked = <span class="literal">true</span>;</span><br><span class="line">                Logcat(<span class="string">&quot;get object_1&#x27;s lock!&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            isObject1Locked = <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">Logcat</span><span class="params">(String message)</span> &#123;</span><br><span class="line">        System.out.println(Thread.currentThread().getName() + <span class="string">&quot;: &quot;</span> + message);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">DeadLockTest</span> <span class="variable">deadLockTest</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DeadLockTest</span>();</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">t1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                deadLockTest.methodA();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (IllegalMonitorStateException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">t2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                deadLockTest.methodB();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (IllegalMonitorStateException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        t1.setName(THREAD_1);</span><br><span class="line">        t2.setName(THREAD_2);</span><br><span class="line">        t1.start();</span><br><span class="line">        t2.start();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            t1.join();</span><br><span class="line">            t2.join();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">        Logcat(<span class="string">&quot;Finish Successfully!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Output:</span></span><br><span class="line"><span class="comment">// Thread 1: try to get object_1&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 2: try to get object_2&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 1: get object_1&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 2: get object_2&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 2: try to get object_1&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 1: Sleeping ... ...</span></span><br><span class="line"><span class="comment">// Thread 1: wake up! try to get object_2&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 1: get object_2&#x27;s lock!</span></span><br><span class="line"><span class="comment">// Thread 1: I will finish, notify!</span></span><br><span class="line"><span class="comment">// Thread 2: Fortunately, object_1 is locked, release object_2&#x27;s lock and wait!</span></span><br><span class="line"><span class="comment">// Thread 2: get object_1&#x27;s lock!</span></span><br><span class="line"><span class="comment">// main: Finish Successfully!</span></span><br></pre></td></tr></table></figure>
+
+<p>这段代码的原理是：<br>2.1.当线程t<sub>2</sub>准备获取object_1的对象锁时，如果object_1已被锁住则放弃当前持有的object_2锁；<br>2.2.当线程t<sub>1</sub>将要释放object_2的对象锁时，如果t<sub>1</sub>处于等待状态，则通知它准备。</p>
+<h2 id="五、题外话：不够用？试试ReetrantLock！"><a href="#五、题外话：不够用？试试ReetrantLock！" class="headerlink" title="五、题外话：不够用？试试ReetrantLock！"></a>五、题外话：不够用？试试ReetrantLock！</h2><p>ReetrantLock在Java8 api docs中是被这么描述的：</p>
+<blockquote><p>A reentrant mutual exclusion Lock with the same basic behavior and semantics as the implicit monitor lock accessed using synchronized methods and statements, but with extended capabilities.</p>
+</blockquote>
+<p>一个与基于monitor锁实现的同步方法或同步语句块有相同的行为和语义的可重入互斥锁，并具有扩展功能。<br>一个简单的demo：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">ReentrantLock</span> <span class="variable">lock</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ReentrantLock</span>();</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">()</span> &#123;</span><br><span class="line">     lock.lock();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        i++;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        lock.unlock();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同步前只需要调用ReentrantLock.lock()锁住，使用完毕一定要解锁。为了增加可读性，可使用try…finally结构。<br>ReentrantLock的功能不仅限于此，它提供尝试获得锁，失败就放弃的功能，demo如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">ReentrantLock</span> <span class="variable">lock</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ReentrantLock</span>();</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (lock.tryLock(<span class="number">1</span>, TimeUnit.SECONDS)) &#123;</span><br><span class="line">             i++;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            System.out.println(Thread.currentThread().getName()+<span class="string">&quot;: failed to get lock!&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span>(lock.isHeldByCurrentThread())&#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>lock.tryLock(1, TimeUnit.SECONDS) 表示尝试获得锁，如果超过一秒还没能获得锁则放弃获得并退出，不会重试。</p>
+<h2 id="六、总结"><a href="#六、总结" class="headerlink" title="六、总结"></a>六、总结</h2><ul>
+<li>synchronized锁住的是哪个对象？<br>对于同步语句块，synchronized锁住的是括号中的对象。对于同步方法，静态同步方法中synchronized锁住的是<em>本类的类对象</em>，而普通同步方法中的synchronized锁住的是<em>本类的实例对象</em></li>
+<li>如何合理使用synchronized？<br>synchronized是同步的，互斥的。在使用的时候必须考虑死锁的情况。通过考察发生死锁的四个必要条件，然后逐一破坏（互斥条件的破坏是不可能的），避免死锁的发生。在复杂的场景，可以考虑使用ReentrantLock。</li>
+</ul>
+<h2 id="七、感想"><a href="#七、感想" class="headerlink" title="七、感想"></a>七、感想</h2><p>在明白原理的前提下，很多问题都能通过原理来得到解答。我第一次接触synchronized的时候，以为它锁的是代码块。然而明白原理后，不仅明白了锁的是对象，而且还明白了锁哪个对象，有什么区别。这是我对于本文的前半部分的感想。重点是死锁的部分，我翻了很多资料，包括大二的操作系统教材。在第一次学同步互斥的时候是一脸懵逼的，感觉难就简单的记一记背一背，没有理解。通过这次写博客的机会，我琢磨了好久，反反复复看死锁那章，终于理解了。相比死记硬背，理解后更能举一反三，融会贯通。所以看这种原理性的书还是要耐心，理解才好。还有，在查资料的过程中发现有很多名词，像多叉树一样互相联系着，感觉自己还有很多不懂，Java这条路还是任重道远。暂时就这么多，就这样吧。水平有限，如果本文有误，还望指正，谢谢~</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/quicksort/" data-toggle="tooltip" data-placement="top" title="快速排序不快了？重复元素下的快速排序">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/aboutSynchronized/" data-toggle="tooltip" data-placement="top" title="浅谈synchronized的实现原理">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/synchronizedObjects/";
+    var disqus_url = "https://spirytusz.co/synchronizedObjects/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

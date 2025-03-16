@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          Android View体系 - 绘制篇 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/android-view-draw/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.jpg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                        
+                    </div>
+                    <h1>Android View体系 - 绘制篇</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2022-04-10
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><code>View</code>的绘制流程主要解决的是<strong>画什么</strong>的问题。在<code>View</code>树这一结构下，每个<code>View</code>是如何解决<strong>画什么</strong>的问题的？本文将从源码的角度，尝试理解<code>View</code>树的绘制流程。</p>
+<h1 id="术语"><a href="#术语" class="headerlink" title="术语"></a>术语</h1><p>下文可能会出现这些术语，为了让读者更方便理解，先打通这几个术语：</p>
+<h2 id="硬件绘制"><a href="#硬件绘制" class="headerlink" title="硬件绘制"></a>硬件绘制</h2><p>所谓的硬件绘制（硬件加速），指的是绘制的操作交给GPU，绘制的结果存储在显存中。在API 14及其以后默认开启硬件绘制。</p>
+<h2 id="软件绘制"><a href="#软件绘制" class="headerlink" title="软件绘制"></a>软件绘制</h2><p>所谓的软件绘制，是指绘制的操作交给CPU，底层使用<code>Skia</code>实现。</p>
+<p>由于硬件加速并不支持所有的2D图形绘制指令（详见<a href="https://developer.android.com/guide/topics/graphics/hardware-accel#unsupported">硬件加速</a>），于是官方提供了关闭硬件加速的方案，可以根据自身需求，关闭指定<code>View</code>，乃至整个App的硬件加速：</p>
+<table>
+<thead>
+<tr>
+<th>粒度</th>
+<th>开启软件绘制的方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Application</td>
+<td><code>android:hardwareAccelerated=&quot;false&quot;</code></td>
+</tr>
+<tr>
+<td>Activity</td>
+<td><code>android:hardwareAccelerated=&quot;false&quot;</code></td>
+</tr>
+<tr>
+<td>Window</td>
+<td>无法停用硬件绘制</td>
+</tr>
+<tr>
+<td>View</td>
+<td><code>View.LAYER_TYPE_SOFTWARE</code></td>
+</tr>
+</tbody></table>
+<h2 id="绘制Layer"><a href="#绘制Layer" class="headerlink" title="绘制Layer"></a>绘制Layer</h2><p>绘制Layer是专门针对<code>View</code>的术语，与软件绘制、硬件绘制没有任何关系，但依赖于软件绘制或硬件绘制。目前共有3种Layer：</p>
+<ul>
+<li><code>LAYER_TYPE_NONE</code> - 默认的Layer，不是离屏缓冲；</li>
+<li><code>LAYER_TYPE_SOFTWARE</code> - 使用CPU进行绘制，绘制结果存在<code>Bitmap</code>里，是离屏缓冲；</li>
+<li><code>LAYER_TYPE_HARDWARE</code> - 如果开启硬件加速，则使用GPU进行绘制，绘制结果存在显存中，是离屏缓冲；否则与<code>LAYER_TYPE_SOFTWARE</code>行为一致。</li>
+</ul>
+<p>为什么要引入绘制Layer这个术语？首先我们要明白，硬件绘制并不支持所有2D图形的操作。当遇到硬件绘制不支持的绘制操作时，为了兼容性，需要暂时让软件绘制来帮忙绘制。软件绘制完毕，返回<code>Bitmap</code>，硬件绘制再将这个<code>Bitmap</code>绘制进CPU的显存即可。</p>
+<h1 id="入口"><a href="#入口" class="headerlink" title="入口"></a>入口</h1><p><code>View</code>的绘制流程的入口在<code>ViewRootImpl</code>的performTraversals中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performTraversals</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    performDraw();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performDraw</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">final</span> <span class="type">boolean</span> <span class="variable">fullRedrawNeeded</span> <span class="operator">=</span> mFullRedrawNeeded || mReportNextDraw;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">canUseAsync</span> <span class="operator">=</span> draw(fullRedrawNeeded);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在performTraversals中，会调用到performDraw，最终调用到draw方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">draw</span><span class="params">(<span class="type">boolean</span> fullRedrawNeeded)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (mAttachInfo.mThreadedRenderer != <span class="literal">null</span> &amp;&amp; mAttachInfo.mThreadedRenderer.isEnabled()) &#123;</span><br><span class="line">        ...</span><br><span class="line">        mAttachInfo.mThreadedRenderer.draw(mView, mAttachInfo, <span class="built_in">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (!drawSoftware(surface, mAttachInfo, xOffset, yOffset,</span><br><span class="line">            scalingRequired, dirty, surfaceInsets)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>ViewRootImpl</code>的draw方法大致逻辑如下:</p>
+<ul>
+<li>如果当前开启了硬件加速，就调用<code>ThreadedRender</code>的draw方法，执行硬件绘制；</li>
+<li>如果未开启硬件加速，则调用drawSoftware，执行软件绘制；</li>
+</ul>
+<p>从<code>ViewRootImpl</code>的draw方法可以看到，一棵<code>View</code>树的绘制，可以有两种方式：</p>
+<ul>
+<li>硬件绘制</li>
+<li>软件绘制</li>
+</ul>
+<p>这两种方式是二选一的，取决于<code>ThreadedRender</code>的isEnable方法。从<code>ThreadedRender</code>的源码可以知道，硬件加速是默认开启，并不可关闭的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ThreadedRender.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ThreadedRender</span> &#123;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">boolean</span> mEnabled;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">setEnabled</span><span class="params">(<span class="type">boolean</span> enabled)</span> &#123;</span><br><span class="line">        mEnabled = enabled;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">updateEnabledState</span><span class="params">(Surface surface)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (surface == <span class="literal">null</span> || !surface.isValid()) &#123;</span><br><span class="line">            setEnabled(<span class="literal">false</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            setEnabled(mInitialized);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">boolean</span> <span class="title function_">initialize</span><span class="params">(Surface surface)</span> <span class="keyword">throws</span> OutOfResourcesException &#123;</span><br><span class="line">        ...</span><br><span class="line">        updateEnabledState(surface);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">updateSurface</span><span class="params">(Surface surface)</span> <span class="keyword">throws</span> OutOfResourcesException &#123;</span><br><span class="line">        updateEnabledState(surface);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">destroy</span><span class="params">()</span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        updateEnabledState(<span class="literal">null</span>);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看来默认逻辑是走<code>ThreadedRender</code>的draw方法，先看看<code>ThreadedRender</code>的draw方法</p>
+<h2 id="入口-硬件绘制"><a href="#入口-硬件绘制" class="headerlink" title="入口 - 硬件绘制"></a>入口 - 硬件绘制</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ThreadedRender.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">draw</span><span class="params">(View view, AttachInfo attachInfo, DrawCallbacks callbacks)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    updateRootDisplayList(view, callbacks);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">updateRootDisplayList</span><span class="params">(View view, DrawCallbacks callbacks)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    updateViewTreeDisplayList(view);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (mRootNodeNeedsUpdate || !mRootNode.hasDisplayList()) &#123;</span><br><span class="line">        <span class="type">RecordingCanvas</span> <span class="variable">canvas</span> <span class="operator">=</span> mRootNode.beginRecording(mSurfaceWidth, mSurfaceHeight);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            ...</span><br><span class="line">            canvas.drawRenderNode(view.updateDisplayListIfDirty());</span><br><span class="line">            ...</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            mRootNode.endRecording();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">updateViewTreeDisplayList</span><span class="params">(View view)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    view.updateDisplayListIfDirty();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>代码中出现了两个名词：<code>RenderNode</code>和DisplayList，它们是什么？<code>RenderNode</code>是用于构建硬件加速的层级结构，每一个<code>View</code>都有一个<code>RenderNode</code>，每个<code>RenderNode</code>持有一系列绘制指令，称之为DisplayList。</p>
+<p>再来看看代码，最终会在<code>ThreadedRender</code>的updateRootDisplayList方法中调用：</p>
+<ul>
+<li>updateViewTreeDisplayList - 收集<code>ViewRootImpl.mView</code>的绘制指令：DisplayList</li>
+<li>RecordingCanvas.drawRenderNode - 绘制持有绘制指令的<code>RenderNode</code></li>
+</ul>
+<p>关键就是：updateViewTreeDisplayList方法该如何逐级搜集绘制指令。</p>
+<h2 id="入口-软件绘制"><a href="#入口-软件绘制" class="headerlink" title="入口 - 软件绘制"></a>入口 - 软件绘制</h2><p>硬件绘制的入口分析完毕，再来看看软件绘制，软件绘制的入口在<code>ViewRootImpl</code>的drawSoftware：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">drawSoftware</span><span class="params">(Surface surface, AttachInfo attachInfo, <span class="type">int</span> xoff, <span class="type">int</span> yoff,</span></span><br><span class="line"><span class="params">        <span class="type">boolean</span> scalingRequired, Rect dirty, Rect surfaceInsets)</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> Canvas canvas;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        canvas = mSurface.lockCanvas(dirty);</span><br><span class="line">    &#125;</span><br><span class="line">    ... </span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        mView.draw(canvas);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        surface.unlockCanvasAndPost(canvas);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在软件绘制的入口drawSoftware处，会调用<code>Surface</code>的lockCanvas方法，锁定<code>Canvas</code>，然后执行<code>View</code>的draw方法，开始逐级绘制。绘制完毕后，调用<code>Surface</code>的unlockCanvasAndPost方法，释放<code>Canvas</code>。</p>
+<h1 id="层级绘制"><a href="#层级绘制" class="headerlink" title="层级绘制"></a>层级绘制</h1><p>不论是硬件绘制还是软件绘制，都离不开逐级遍历<code>View</code>树。先来看看硬件绘制是如何收集绘制指令的。</p>
+<h2 id="层级绘制-硬件绘制"><a href="#层级绘制-硬件绘制" class="headerlink" title="层级绘制 - 硬件绘制"></a>层级绘制 - 硬件绘制</h2><p>硬件绘制的层级遍历入口在<code>View</code>的updateDisplayListIfDirty方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> RenderNode <span class="title function_">updateDisplayListIfDirty</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">RenderNode</span> <span class="variable">renderNode</span> <span class="operator">=</span> mRenderNode;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> ((mPrivateFlags &amp; PFLAG_DRAWING_CACHE_VALID) == <span class="number">0</span></span><br><span class="line">        || !renderNode.hasDisplayList()</span><br><span class="line">        || (mRecreateDisplayList)) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (renderNode.hasDisplayList() ...) &#123;</span><br><span class="line"></span><br><span class="line">            dispatchGetDisplayList();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> renderNode;</span><br><span class="line">        &#125;</span><br><span class="line">        mRecreateDisplayList = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">layerType</span> <span class="operator">=</span> getLayerType();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> <span class="type">RecordingCanvas</span> <span class="variable">canvas</span> <span class="operator">=</span> renderNode.beginRecording(width, height);</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (layerType == LAYER_TYPE_SOFTWARE) &#123;</span><br><span class="line">            buildDrawingCache(<span class="literal">true</span>);</span><br><span class="line">            <span class="type">Bitmap</span> <span class="variable">cache</span> <span class="operator">=</span> getDrawingCache(<span class="literal">true</span>);</span><br><span class="line">            <span class="keyword">if</span> (cache != <span class="literal">null</span>) &#123;</span><br><span class="line">                canvas.drawBitmap(cache, <span class="number">0</span>, <span class="number">0</span>, mLayerPaint);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> ((mPrivateFlags &amp; PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) &#123;</span><br><span class="line">                dispatchDraw(canvas);</span><br><span class="line">                ...</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                draw(canvas);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        renderNode.endRecording();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;</span><br><span class="line">        mPrivateFlags &amp;= ~PFLAG_DIRTY_MASK;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> renderNode;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码中可以看出，以下三种情况会触发收集绘制指令：</p>
+<ul>
+<li><code>mPrivateFlag</code>没有<code>PFLAG_DRAWING_CACHE_VALID</code>标志 - 缓存不可用</li>
+<li>!renderNode.hasDisplayList() - 没有构建过DisplayList</li>
+<li>mRecreateDisplayList - 主动重新构建DisplayList</li>
+</ul>
+<p>如果上面三个条件都没满足，说明可以使用上一次的缓存，修改标志位，结束收集DisplayList。</p>
+<p>否则，上面三个条件一旦满足其一，就会废弃上次绘制的缓存，并重新记录绘制指令DisplayList。记录DisplayList的过程中，根据<code>View</code>不同的layerType来执行不同的逻辑：</p>
+<ul>
+<li><code>LAYER_TYPE_SOFTWARE</code> - 将<code>View</code>转化成<code>Bitmap</code>，记录到<code>RecordingCanvas</code>中</li>
+<li><code>LAYER_TYPE_HARDWARE</code>, <code>LAYER_TYPE_NONE</code> - 根据<code>View</code>是否需要跳过绘制（一般为<code>ViewGroup</code>）来决定是调用dispatchDraw方法还是draw方法。</li>
+</ul>
+<h3 id="层级绘制-硬件绘制-LAYER-TYPE-SOFTWARE"><a href="#层级绘制-硬件绘制-LAYER-TYPE-SOFTWARE" class="headerlink" title="层级绘制 - 硬件绘制 - LAYER_TYPE_SOFTWARE"></a>层级绘制 - 硬件绘制 - <code>LAYER_TYPE_SOFTWARE</code></h3><p>当layerType为<code>LAYER_TYPE_SOFTWARE</code>时，主要使用buildDrawingCache方法来将<code>View</code>的内容转化为<code>Bitmap</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">buildDrawingCache</span><span class="params">(<span class="type">boolean</span> autoScale)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    buildDrawingCacheImpl(autoScale);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">buildDrawingCacheImpl</span><span class="params">(<span class="type">boolean</span> autoScale)</span> &#123;</span><br><span class="line">    bitmap = Bitmap.createBitmap(mResources.getDisplayMetrics(),</span><br><span class="line">                width, height, quality);</span><br><span class="line">    bitmap.setDensity(getResources().getDisplayMetrics().densityDpi);</span><br><span class="line">    <span class="keyword">if</span> (autoScale) &#123;</span><br><span class="line">        mDrawingCache = bitmap;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        mUnscaledDrawingCache = bitmap;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    Canvas canvas;</span><br><span class="line">    <span class="keyword">if</span> (attachInfo != <span class="literal">null</span>) &#123;</span><br><span class="line">        canvas = attachInfo.mCanvas;</span><br><span class="line">        <span class="keyword">if</span> (canvas == <span class="literal">null</span>) &#123;</span><br><span class="line">            canvas = <span class="keyword">new</span> <span class="title class_">Canvas</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        canvas.setBitmap(bitmap);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        canvas = <span class="keyword">new</span> <span class="title class_">Canvas</span>(bitmap);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> ((mPrivateFlags &amp; PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) &#123;</span><br><span class="line">        mPrivateFlags &amp;= ~PFLAG_DIRTY_MASK;</span><br><span class="line">        dispatchDraw(canvas);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        draw(canvas);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (attachInfo != <span class="literal">null</span>) &#123;</span><br><span class="line">           attachInfo.mCanvas = canvas;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>阅读代码可以看到，<code>View</code>使用buildDrawingCacheImpl来构建<code>Bitmap</code>。它是如何构建出<code>Bitmap</code>的？</p>
+<ol>
+<li>构造一个<code>Bitmap</code>，宽高与<code>View</code>的宽高相同，保存在mDrawingCache或mUnscaledDrawingCache中；</li>
+<li>如果是首次进入该方法，则构造一个<code>Canvas</code>实例，否则使用上次保存的<code>Canvas</code>实例；</li>
+<li>将bitmap设置进<code>Canvas</code>实例中；</li>
+<li><code>ViewGroup</code>执行dispatchDraw，<code>View</code>执行draw，将<code>View</code>的内容绘制在<code>Bitmap</code>中；</li>
+</ol>
+<p>经过以上四个步骤，<code>View</code>的所有内容都已经绘制到了<code>Bitmap</code>之中。回到updateDisplayListIfDirty方法，将构造好的<code>Bitmap</code>绘制到<code>RecordingCanvas</code>中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (layerType == LAYER_TYPE_SOFTWARE) &#123;</span><br><span class="line">    buildDrawingCache(<span class="literal">true</span>);</span><br><span class="line">    <span class="type">Bitmap</span> <span class="variable">cache</span> <span class="operator">=</span> getDrawingCache(<span class="literal">true</span>);</span><br><span class="line">    <span class="keyword">if</span> (cache != <span class="literal">null</span>) &#123;</span><br><span class="line">        canvas.drawBitmap(cache, <span class="number">0</span>, <span class="number">0</span>, mLayerPaint);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="层级绘制-硬件绘制-非LAYER-TYPE-SOFTWARE"><a href="#层级绘制-硬件绘制-非LAYER-TYPE-SOFTWARE" class="headerlink" title="层级绘制 - 硬件绘制 - 非LAYER_TYPE_SOFTWARE"></a>层级绘制 - 硬件绘制 - 非<code>LAYER_TYPE_SOFTWARE</code></h3><p>非<code>LAYER_TYPE_SOFTWARE</code>的情况无非就是<code>LAYER_TYPE_HARDWARE</code>或<code>LAYER_TYPE_NONE</code>，在开启硬件加速的情况下，这两者可以认为是相同的layerType，可以认为就是<code>LAYER_TYPE_HARDWARE</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> ((mPrivateFlags &amp; PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) &#123;</span><br><span class="line">    dispatchDraw(canvas);</span><br><span class="line">    ...</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    draw(canvas);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，当layerType为<code>LAYER_TYPE_HARDWARE</code>，<code>View</code>会将它的绘制指令以及其子<code>View</code>的绘制指令记录到<code>RecordingCanvas</code>中。</p>
+<p>不难发现，为了解决硬件绘制的兼容性问题（硬件绘制并不支持所有的<a href="https://developer.android.com/guide/topics/graphics/hardware-accel?hl=zh-cn#unsupported">绘制指令</a>），在硬件绘制时，通过引入<code>LAYER_TYPE_SOFTWARE</code>，将自身和子<code>View</code>的所有绘制指令交给<code>Canvas</code>，把自身和子<code>View</code>的内容绘制到<code>Bitmap</code>之中，最后再通过<code>RecordingCanvas.drawBitmap</code>方法，将对应<code>View</code>的内容记录到<code>DisplayList</code>中。</p>
+<p>所以，在日常开发中，如果用到了不支持的绘制指令，需要手动将<code>View</code>的layerType设置为<code>LAYER_TYPE_SOFTWARE</code>，以达到获取正确绘制结果的目的。</p>
+<p>话说回来，无论layerType是哪一种，在硬件绘制且缓存不可用时，最终都会执行以下语句：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> RenderNode <span class="title function_">updateDisplayListIfDirty</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> ((mPrivateFlags &amp; PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) &#123;</span><br><span class="line">        dispatchDraw(canvas);</span><br><span class="line">        ...</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        draw(canvas);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">draw</span><span class="params">(Canvas canvas)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    dispatchDraw(canvas);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说，绘制的请求是要传递给子<code>View</code>的，看看dispatchDraw内部做了什么：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewGroup.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">dispatchDraw</span><span class="params">(Canvas canvas)</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">childrenCount</span> <span class="operator">=</span> mChildrenCount;</span><br><span class="line">    <span class="keyword">final</span> View[] children = mChildren;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; childrenCount; i++) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">View</span> <span class="variable">child</span> <span class="operator">=</span> children[i];</span><br><span class="line">          <span class="keyword">if</span> ((child.mViewFlags &amp; VISIBILITY_MASK) == VISIBLE) &#123;</span><br><span class="line">            drawChild(canvas, child, drawingTime);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">drawChild</span><span class="params">(Canvas canvas, View child, <span class="type">long</span> drawingTime)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> child.draw(canvas, <span class="built_in">this</span>, drawingTime);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在dispatchDraw内部会遍历当前<code>View</code>的子<code>View</code>，挨个调用其<code>draw(Canvas, ViewGroup, long)</code>方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="type">boolean</span> <span class="title function_">draw</span><span class="params">(Canvas canvas, ViewGroup parent, <span class="type">long</span> drawingTime)</span> &#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">boolean</span> <span class="variable">hardwareAcceleratedCanvas</span> <span class="operator">=</span> canvas.isHardwareAccelerated();</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">drawingWithRenderNode</span> <span class="operator">=</span> mAttachInfo != <span class="literal">null</span></span><br><span class="line">            &amp;&amp; mAttachInfo.mHardwareAccelerated</span><br><span class="line">            &amp;&amp; hardwareAcceleratedCanvas;</span><br><span class="line">    <span class="keyword">final</span> <span class="type">boolean</span> <span class="variable">drawingWithDrawingCache</span> <span class="operator">=</span> cache != <span class="literal">null</span> &amp;&amp; !drawingWithRenderNode;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">Bitmap</span> <span class="variable">cache</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (layerType == LAYER_TYPE_SOFTWARE || !drawingWithRenderNode) &#123;</span><br><span class="line">        cache = getDrawingCache(<span class="literal">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (drawingWithRenderNode) &#123;</span><br><span class="line">        renderNode = updateDisplayListIfDirty();</span><br><span class="line">        <span class="keyword">if</span> (!renderNode.hasDisplayList()) &#123;</span><br><span class="line">            renderNode = <span class="literal">null</span>;</span><br><span class="line">            drawingWithRenderNode = <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (!drawingWithDrawingCache) &#123;</span><br><span class="line">        <span class="keyword">if</span> (drawingWithRenderNode) &#123;</span><br><span class="line">            mPrivateFlags &amp;= ~PFLAG_DIRTY_MASK;</span><br><span class="line">            ((RecordingCanvas) canvas).drawRenderNode(renderNode);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> ((mPrivateFlags &amp; PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRA</span><br><span class="line">                mPrivateFlags &amp;= ~PFLAG_DIRTY_MASK;</span><br><span class="line">                dispatchDraw(canvas);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                draw(canvas);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (cache != <span class="literal">null</span>) &#123;</span><br><span class="line">        ...</span><br><span class="line">        canvas.drawBitmap(cache, ...)</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>draw(Canvas, ViewGroup, long)</code>方法并不是我们熟悉的<code>draw(Canvas)</code>方法，<code>draw(Canvas, ViewGroup, long)</code>内部又调用了<code>draw(Canvas)</code>方法。</p>
+<p>在<code>draw(Canvas, ViewGroup, long)</code>方法内部执行绘制逻辑时，首先会调用updateDisplayListIfDirty更新当前<code>View</code>的DisplayList；接着：</p>
+<ul>
+<li>如果缓存不可用 - 执行<code>RecordingCanvas.drawRenderNode</code>；</li>
+<li>否则 - 使用缓存，将缓存直接绘制到<code>RecordingCanvas</code>中；</li>
+</ul>
+<p>可以看到，当一个<code>View</code>调用了updateDisplayListIfDirty之后，就有可能会执行<code>RecordingCanvas.drawRenderNode</code>，将<code>RenderNode</code>所包含的DisplayList的各种绘制指令给绘制到<code>RecordingCanvas</code>中。</p>
+<h3 id="层级绘制-硬件绘制-总结"><a href="#层级绘制-硬件绘制-总结" class="headerlink" title="层级绘制 - 硬件绘制 - 总结"></a>层级绘制 - 硬件绘制 - 总结</h3><p>总结一下，对于<code>View</code>树上的每一个节点<code>View</code>，在硬件绘制时，上级会首先调用其updateDisplayListIfDirty方法将绘制请求传递给它。当传递请求给到当前的节点<code>View</code>时，<code>View</code>会根据它自己的layerType来决定执行的逻辑：</p>
+<ul>
+<li><code>LAYER_TYPE_SOFTWARE</code> - 使用缓存在<code>AttachInfo</code>的<code>Canvas</code>，如果没有就新建一个，将自身及子<code>View</code>的内容绘制到<code>Bitmap</code>中，再将<code>Bitmap</code>记录到硬件绘制专用的<code>RecordingCanvas</code>中；</li>
+<li><code>LAYER_TYPE_HARDWARE</code>, <code>LAYER_TYPE_NONE</code>  - 使用<code>RecordingCanvas</code>记录绘制指令；</li>
+</ul>
+<p>而后通过dispatchDraw继续向其子<code>View</code>递归，将绘制请求传递给子<code>View</code>，直至叶子节点。</p>
+<p>最终都会调用<code>RecordingCanvas.drawRenderNode</code>，将<code>View</code>的内容渲染到渲染缓冲区中，等待渲染到屏幕上；</p>
+<p>一图以蔽之，硬件绘制的流程（使用虚线代表向子<code>View</code>递归的过程）：<br><img src="/android-view-draw/android_view_hardware_draw.drawio.png"></p>
+<h2 id="层级绘制-软件绘制"><a href="#层级绘制-软件绘制" class="headerlink" title="层级绘制 - 软件绘制"></a>层级绘制 - 软件绘制</h2><p>如果<code>ThreadedRenderer</code>的isEnable方法返回了false，说明关闭了硬件加速，就会采用软件绘制。软件绘制的入口在<code>ViewRootImpl</code>的drawSoftware方法中，它会直接调用<code>View</code>的<code>draw(Canvas)</code>方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// View.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">drawSoftware</span><span class="params">(...)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    canvas = surface.lockCanvas(dirty);</span><br><span class="line">    ...</span><br><span class="line">    mView.draw(canvas);</span><br><span class="line">    ...</span><br><span class="line">    surface.unlockCanvasAndPost(canvas);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与硬件绘制不同的是，这里的的<code>Canvas</code>实例是由<code>Surface</code>的lockCanvas方法提供的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Surface.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Canvas</span> <span class="variable">mCanvas</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CompatibleCanvas</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> Canvas <span class="title function_">lockCanvas</span><span class="params">(Rect inOutDirty)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    nativeLockCanvas(mNativeObject, mCanvas, inOutDirty);</span><br><span class="line">    <span class="keyword">return</span> mCanvas;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而<code>CompatibleCanvas</code>是<code>Canvas</code>的子类，只是对<code>Canvas</code>的一个方法进行了重写，不影响各种drawXXX<br>方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Surface.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">CompatibleCanvas</span> <span class="keyword">extends</span> <span class="title class_">Canvas</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setMatrix</span><span class="params">(Matrix matrix)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">getMatrix</span><span class="params">(Matrix m)</span> &#123; ... &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而在硬件绘制过程中，使用到的<code>Canvas</code>是<code>RecordingCanvas</code>，<code>RecordingCanvas</code>对<code>Canvas</code>的各种drawXXX方法进行了重写：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RecordingCanvas.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">RecordingCanvas</span> <span class="keyword">extends</span> <span class="title class_">DisplayListCanvas</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">drawCircle</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">drawRoundRect</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">drawTextureLayer</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">drawRenderNode</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">drawWebViewFunctor</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">drawGLFunctor2</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// DisplayListCanvas.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">DisplayListCanvas</span> <span class="keyword">extends</span> <span class="title class_">BaseRecordingCanvas</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// BaseRecordingCanvas.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseRecordingCanvas</span> <span class="keyword">extends</span> <span class="title class_">Canvas</span> &#123;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawArc</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawBitmap</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawARGB</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawBitmapMesh</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawCircle</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawColor</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawLine</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawOval</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawPaint</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">drawText</span><span class="params">(...)</span> &#123; ... &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以认为在软件绘制过程中，使用的<code>Canvas</code>与硬件绘制的完全不同，说明硬件绘制和软件绘制的实现是不同的。</p>
+<p>回到drawSoftware方法，drawSoftware方法调用<code>View</code>的<code>draw(Canvas)</code>方法执行绘制逻辑。<code>draw(Canvas)</code>方法上文硬件绘制时已经分析过，只不过这里传递的<code>Canvas</code>是普通的<code>Canvas</code>。</p>
+<p>一图以蔽之（虚线代表向子<code>View</code>递归）：</p>
+<p><img src="/android-view-draw/android_view_software_draw.drawio.png"></p>
+<p>总体而言，一次<code>View</code>树的完整绘制流程如图所示（虚线代表向子<code>View</code>递归）：<br><img src="/android-view-draw/android_view_software_hardware_draw.drawio.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><code>View</code>的绘制分为硬件绘制和软件绘制，对于<code>View</code>树上的每一个节点<code>View</code>:</p>
+<ul>
+<li><p>软件绘制</p>
+<p>使用<code>Canvas</code>实例进行绘制，通过<code>draw(Canvas)</code>来绘制自身，通过<code>dispatchDraw(Canvas)</code>来绘制子<code>View</code>；</p>
+</li>
+<li><p>硬件绘制</p>
+<p>调用updateDisplayListIfDirty方法构建DisplayList，构建DisplayList的流程与软件绘制无异，区别在于绘制使用的<code>Canvas</code>实例是硬件绘制专用的<code>RecordingCanvas</code>。</p>
+</li>
+</ul>
+<p>硬件绘制相比软件绘制好处多多，在API 14及其以上的系统默认开启，但硬件绘制并<a href="(https://developer.android.com/guide/topics/graphics/hardware-accel#unsupported)">不支持</a>所有的绘制指令，如果你不幸使用到了这些绘制指令，你就需要避免使用硬件绘制来执行这些绘制指令。</p>
+<p>官方提供了三种粒度来<a href="https://developer.android.com/guide/topics/graphics/hardware-accel#controlling">控制硬件加速</a>：</p>
+<ul>
+<li>Application</li>
+<li>Activity</li>
+<li>View</li>
+</ul>
+<p>我们可以直接在AndroidManifest.xml上直接关闭整个应用或单个Activity的硬件绘制，但为了兼容少许几个硬件绘制不支持的绘制指令而关闭Activity乃至整个应用的硬件加速显然是不明智的。于是官方提供了<code>LayerType</code>这个概念来控制<code>View</code>使用硬件绘制还是软件绘制。</p>
+<p>如果当前处于硬件绘制的流程，指定<code>LayerType</code>为<code>LAYER_TPYE_SOFTWARE</code>，该<code>View</code>就会使用软件绘制的逻辑绘制出<code>Bitmap</code>，再把<code>Bitmap</code>交给硬件绘制逻辑进行绘制，以避开硬件绘制不支持的绘制指令。</p>
+<p>如果当前处于软件绘制的流程，则不区分<code>LayerType</code>。</p>
+<p>至于<code>View</code>是如何解决<strong>画什么</strong>的问题，其实是通过<code>Canvas</code>实例的各种drawXXX方法来绘制各种图形，最终通过渲染呈现在屏幕上。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/multi-project-aggregation/" data-toggle="tooltip" data-placement="top" title="巧用Gradle缓存机制">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/android-view-layout/" data-toggle="tooltip" data-placement="top" title="Android View体系 - 布局篇">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/android-view-draw/";
+    var disqus_url = "https://spirytusz.co/android-view-draw/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

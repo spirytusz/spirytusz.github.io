@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          浅谈Kotlin协程(2) - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/kotlin-coroutine-launch/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.webp')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Kotlin - Coroutine" title="Kotlin - Coroutine">Kotlin - Coroutine</a>
+                        
+                    </div>
+                    <h1>浅谈Kotlin协程(2)</h1>
+                    <h2 class="subheading">协程的启动和执行</h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2022-08-20
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>理解Kotlin协程的启动和执行是理解Kotlin协程各种概念的基石。</p>
+<p>本文是《深入理解Kotlin协程》的读书笔记，记录一些我对Kotlin协程启动的源码阅读流程。</p>
+<h1 id="从入口函数说起"><a href="#从入口函数说起" class="headerlink" title="从入口函数说起"></a>从入口函数说起</h1><p><code>kotlinx-coroutine-core</code>提供了一系列方法来启动协程，其中就有<code>launch</code>方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> CoroutineScope.<span class="title">launch</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    context: <span class="type">CoroutineContext</span> = EmptyCoroutineContext,</span></span></span><br><span class="line"><span class="params"><span class="function">    start: <span class="type">CoroutineStart</span> = CoroutineStart.DEFAULT,</span></span></span><br><span class="line"><span class="params"><span class="function">    block: <span class="type">suspend</span> <span class="type">CoroutineScope</span>.() -&gt; <span class="type">Unit</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>: Job &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上篇文章<a href="../kotlin-coroutine-context">浅谈Kotlin协程(1)——Kotlin协程上下文是什么</a>中我们已经理解了<code>CoroutineScope</code>与<code>CoroutineContext</code>，这篇文章就不做赘述。剩下两个要素：</p>
+<ul>
+<li><p><code>CoroutineStart</code>——启动模式，是个枚举，默认是<code>CoroutineStart.DEFAULT</code>；</p>
+<table>
+<thead>
+<tr>
+<th>启动模式</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DEFAULT</td>
+<td><strong>立即调度</strong>，协程体执行前如果被取消，将会立即进入取消状态</td>
+</tr>
+<tr>
+<td>ATOMIC</td>
+<td><strong>立即调度</strong>，与<code>DEFAULT</code>不同的是，如果协程体执行前被取消，只会在协程体的第一个挂起点后进入取消状态</td>
+</tr>
+<tr>
+<td>LAZY</td>
+<td>主动调用start方法才会开始调度</td>
+</tr>
+<tr>
+<td>UNDISPATCHED</td>
+<td><strong>立即执行</strong>协程体，直至第一个挂起点</td>
+</tr>
+</tbody></table>
+<p><code>CoroutineStart</code>的作用和实现咱们暂且先按下不表。</p>
+</li>
+<li><p><code>suspend CoroutineScope.() -&gt; Unit</code>——协程体。是<code>BaseContinuationImpl</code>的子类型，下文会提及。</p>
+</li>
+</ul>
+<p>我们以默认的启动模式为例，并指定<code>CoroutineContext</code>为<code>EmptyCoroutineContext</code>:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> coroutineScope: CoroutineScope = ...</span><br><span class="line"></span><br><span class="line">coroutineScope.launch &#123;</span><br><span class="line">    println(<span class="string">&quot;Hello Kotlin Coroutine!&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> CoroutineScope.<span class="title">launch</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    context: <span class="type">CoroutineContext</span> = EmptyCoroutineContext,</span></span></span><br><span class="line"><span class="params"><span class="function">    start: <span class="type">CoroutineStart</span> = CoroutineStart.DEFAULT,</span></span></span><br><span class="line"><span class="params"><span class="function">    block: <span class="type">suspend</span> <span class="type">CoroutineScope</span>.() -&gt; <span class="type">Unit</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>: Job &#123;</span><br><span class="line">    <span class="comment">// ①</span></span><br><span class="line">    <span class="keyword">val</span> newContext = newCoroutineContext(context)</span><br><span class="line">    <span class="comment">// ②</span></span><br><span class="line">    <span class="keyword">val</span> coroutine = <span class="keyword">if</span> (start.isLazy)</span><br><span class="line">        LazyStandaloneCoroutine(newContext, block) <span class="keyword">else</span></span><br><span class="line">        StandaloneCoroutine(newContext, active = <span class="literal">true</span>)</span><br><span class="line">    <span class="comment">// ③</span></span><br><span class="line">    coroutine.start(start, coroutine, block)</span><br><span class="line">    <span class="keyword">return</span> coroutine</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="包装CoroutineContext"><a href="#包装CoroutineContext" class="headerlink" title="包装CoroutineContext"></a>包装CoroutineContext</h2><p>①处中对传入的协程上下文进行了包装（简化了无关代码）：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> CoroutineScope.<span class="title">newCoroutineContext</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    context: <span class="type">CoroutineContext</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>: CoroutineContext &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">if</span> (context !== Dispatchers.Default &amp;&amp; context[ContinuationInterceptor] == <span class="literal">null</span>) &#123;</span><br><span class="line">        context + Dispatchers.Default</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        context</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，newCoroutineContext的作用是：如果上下文中没有调度器，就添加默认的调度器，否则原样返回。</p>
+<h2 id="创建协程"><a href="#创建协程" class="headerlink" title="创建协程"></a>创建协程</h2><p>②处会根据协程的启动模式中创建一个协程。因为我们用的是默认的协程启动模式，所以会创建一个类型为<code>StandaloneCoroutine</code>的协程：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">StandaloneCoroutine</span>(</span><br><span class="line">    parentContext: CoroutineContext,</span><br><span class="line">    active: <span class="built_in">Boolean</span></span><br><span class="line">) : AbstractCoroutine&lt;<span class="built_in">Unit</span>&gt;(</span><br><span class="line">    parentContext, </span><br><span class="line">    initParentJob = <span class="literal">true</span>, </span><br><span class="line">    active = active</span><br><span class="line">) &#123; ... &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">AbstractCoroutine</span>&lt;<span class="type">in T</span>&gt;(</span><br><span class="line">    parentContext: CoroutineContext,</span><br><span class="line">    initParentJob: <span class="built_in">Boolean</span>,</span><br><span class="line">    active: <span class="built_in">Boolean</span></span><br><span class="line">) : JobSupport(active), Job, Continuation&lt;T&gt;, CoroutineScope &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Starts this coroutine with the given code [block] and [start] strategy.</span></span><br><span class="line"><span class="comment">     * This function shall be invoked at most once on this coroutine.</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     * * [DEFAULT] uses [startCoroutineCancellable].</span></span><br><span class="line"><span class="comment">     * * [ATOMIC] uses [startCoroutine].</span></span><br><span class="line"><span class="comment">     * * [UNDISPATCHED] uses [startCoroutineUndispatched].</span></span><br><span class="line"><span class="comment">     * * [LAZY] does nothing.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;R&gt;</span> <span class="title">start</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        start: <span class="type">CoroutineStart</span>, </span></span></span><br><span class="line"><span class="params"><span class="function">        receiver: <span class="type">R</span>, </span></span></span><br><span class="line"><span class="params"><span class="function">        block: <span class="type">suspend</span> <span class="type">R</span>.() -&gt; <span class="type">T</span></span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span> &#123;</span><br><span class="line">        start(block, receiver, <span class="keyword">this</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>出现的类中，他们互相之间的关系为：<br><img src="/kotlin-coroutine-launch/abstract_coroutine_uml.drawio.png"></p>
+<h2 id="启动协程"><a href="#启动协程" class="headerlink" title="启动协程"></a>启动协程</h2><p>协程创建完毕，接下来在③处启动协程。由于启动模式是<code>DEFAULT</code>，根据<code>AbstractCoroutine</code>的注释，会调用<code>startCoroutineCancellable</code>方法。阅读了<code>CoroutineStart</code>的源码，发现它重写的<code>invoke</code>操作符：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title class_">CoroutineStart</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">operator</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;R, T&gt;</span> <span class="title">invoke</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        block: <span class="type">suspend</span> <span class="type">R</span>.() -&gt; <span class="type">T</span>, </span></span></span><br><span class="line"><span class="params"><span class="function">        receiver: <span class="type">R</span>, </span></span></span><br><span class="line"><span class="params"><span class="function">        completion: <span class="type">Continuation</span>&lt;<span class="type">T</span>&gt;</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: <span class="built_in">Unit</span> = <span class="keyword">when</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        DEFAULT -&gt; block.startCoroutineCancellable(receiver, completion)</span><br><span class="line">        ATOMIC -&gt; block.startCoroutine(receiver, completion)</span><br><span class="line">        UNDISPATCHED -&gt; block.startCoroutineUndispatched(receiver, completion)</span><br><span class="line">        LAZY -&gt; <span class="built_in">Unit</span> <span class="comment">// will start lazily</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>继续跟进<code>startCoroutineCancellable</code>方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;R, T&gt;</span> <span class="params">(<span class="keyword">suspend</span> (R)</span></span> -&gt; T).startCoroutineCancellable(</span><br><span class="line">    receiver: R, completion: Continuation&lt;T&gt;,</span><br><span class="line">    onCancellation: ((cause: Throwable) -&gt; <span class="built_in">Unit</span>)? = <span class="literal">null</span></span><br><span class="line">) &#123;</span><br><span class="line">    createCoroutineUnintercepted(receiver, completion)</span><br><span class="line">      .intercepted()</span><br><span class="line">      .resumeCancellableWith(Result.success(<span class="built_in">Unit</span>), onCancellation)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先，<code>startCoroutineCancellable</code>方法的receiver是协程体本身，就是我们调用<code>launch</code>是传入的lambda表达式。</p>
+<p>其次，它有三个参数</p>
+<ul>
+<li>receiver: R——即为协程作用域<code>CoroutineScope</code>；</li>
+<li>continuation: Continuation&lt;T&gt;——即为实现了<code>AbstractCoroutine</code>的<code>StandaloneCoroutine</code>实例；</li>
+<li>onCancellation: ((cause: Throwable) -&gt; Unit)? 暂且按下不表</li>
+</ul>
+<p>再次，在<code>startCoroutineCancellable</code>中会调用三个方法，我们逐个分析。</p>
+<h3 id="createCoroutineUnintercepted"><a href="#createCoroutineUnintercepted" class="headerlink" title="createCoroutineUnintercepted"></a>createCoroutineUnintercepted</h3><p>首先我们需要知道一个背景知识：只要是被suspend关键词所修饰的lambda表达式，其类型均为<code>BaseContinuationImpl</code>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> suspendLambda = <span class="keyword">suspend</span> &#123; &#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> Class<span class="type">&lt;*&gt;</span>.<span class="title">isSubClassOf</span><span class="params">(that: <span class="type">Class</span>&lt;*&gt;)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">if</span> (<span class="keyword">this</span> == Any::<span class="keyword">class</span>.java) &#123;</span><br><span class="line">        <span class="literal">false</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">this</span> == that || <span class="keyword">this</span>.superclass.isSubClassOf(that)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> baseContinuationImpl =</span><br><span class="line">    Class.forName(<span class="string">&quot;kotlin.coroutines.jvm.internal.BaseContinuationImpl&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// Output: true</span></span><br><span class="line">println(suspendLambda::<span class="keyword">class</span>.java.isSubClassOf(baseContinuationImpl))</span><br></pre></td></tr></table></figure>
+
+<p>再来看看<code>createCoroutineUnintercepted</code>方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="type">&lt;R, T&gt;</span> <span class="params">(<span class="keyword">suspend</span> R.()</span></span> -&gt; T).createCoroutineUnintercepted(</span><br><span class="line">    receiver: R,</span><br><span class="line">    completion: Continuation&lt;T&gt;</span><br><span class="line">): Continuation&lt;<span class="built_in">Unit</span>&gt; &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">if</span> (<span class="keyword">this</span> <span class="keyword">is</span> BaseContinuationImpl)</span><br><span class="line">        create(receiver, completion)</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为<code>this</code>是被suspend修饰的lambda，那么这里必定会走if分支。并且，因为kotlin编译器为我们生成了synthetic方法，create方法事实上已经被我们传入的协程体所重写。编译完毕后，反编译成java代码再查看：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">test</span><span class="params">()</span> &#123;</span><br><span class="line">    BuildersKt.launch$<span class="keyword">default</span>(</span><br><span class="line">        (CoroutineScope)GlobalScope.INSTANCE, </span><br><span class="line">        <span class="literal">null</span>, </span><br><span class="line">        <span class="literal">null</span>, </span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">SuspendLambdaAnonymousClass</span>(<span class="literal">null</span>)</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">SuspendLambdaAnonymousClass</span> <span class="keyword">extends</span> <span class="title class_">SuspendLambda</span> </span><br><span class="line">    <span class="keyword">implements</span> <span class="title class_">Function2</span>&lt;...&gt; &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>协程体本质还是匿名内部类，经过编译后编译器会生成一个内部类<code>SuspendLambdaAnonymousClass</code>，它是<code>SuspendLambda</code>的子类，所以<code>SuspendLambdaAnonymousClass</code>本身也是一个<code>Continuation</code>。多个类的关系如下：<br><img src="/kotlin-coroutine-launch/continuation_impl_uml.drawio.png"></p>
+<p>其中，<code>&lt;&lt;anonymous suspend lambda&gt;&gt;</code> 就是我们传入的lambda，即协程体。</p>
+<p>我们再来看看生成的create方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> param1Object receiver: CoroutineScope</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> param1Continuation completion: Continuation&lt;T&gt;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> Continuation&lt;Unit&gt; <span class="title function_">create</span><span class="params">(</span></span><br><span class="line"><span class="params">    Object param1Object, </span></span><br><span class="line"><span class="params">    Continuation&lt;?&gt; param1Continuation</span></span><br><span class="line"><span class="params">)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> (Continuation&lt;Unit&gt;) <span class="keyword">new</span> <span class="title class_">SuspendLambdaAnonymousClass</span>(</span><br><span class="line">        (Continuation)param1Continuation</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其本质还是将传入的<code>Continuation</code>（<code>StandaloneCoroutine</code>）做一次包装，包装成<code>BaseContinuationImpl</code>类型。前后者的关系如下图所示：</p>
+<p><img src="/kotlin-coroutine-launch/base_wrap_abstract_coroutine.drawio.png"></p>
+<h3 id="intercepted"><a href="#intercepted" class="headerlink" title="intercepted"></a>intercepted</h3><p>接下来会调用<code>intercepted</code>方法，从方法的名字就可以看出这个是拦截协程用的。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">actual</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> Continuation<span class="type">&lt;T&gt;</span>.<span class="title">intercepted</span><span class="params">()</span></span>: Continuation&lt;T&gt; =</span><br><span class="line">    (<span class="keyword">this</span> <span class="keyword">as</span>? ContinuationImpl)?.intercepted() ?: <span class="keyword">this</span></span><br></pre></td></tr></table></figure>
+
+<p>跟进<code>ContinuationImpl</code>的代码后发现确实如此，它会将传递过来的<code>Continuation</code>再度包装成<code>DispatchedContinuation</code>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">ContinuationImpl</span>(</span><br><span class="line">    ...</span><br><span class="line">): BaseContinuationImpl(...) &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">intercepted</span><span class="params">()</span></span>: Continuation&lt;Any?&gt; =</span><br><span class="line">        intercepted</span><br><span class="line">            ?: (context[ContinuationInterceptor]?.interceptContinuation(<span class="keyword">this</span>) ?: <span class="keyword">this</span>)</span><br><span class="line">                .also &#123; intercepted = it &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为此时协程上下文中唯一的拦截器是<code>Dispatchers.Default</code>，也就是协程调度器，协程调度器在拦截协程的时候又把传入的<code>Continuation</code>再包装一遍：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">CoroutineDispatcher</span> : <span class="type">ContinuationInterceptor</span> &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">interceptContinuation</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        continuation: <span class="type">Continuation</span>&lt;<span class="type">T</span>&gt;</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: Continuation&lt;T&gt; = DispatchedContinuation(<span class="keyword">this</span>, continuation)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以此时的<code>Continuation</code>相当于：</p>
+<p><img src="/kotlin-coroutine-launch/dispatched_wrap_base_wrap_abstract_coroutine.drawio.png"></p>
+<h3 id="resumeCancellableWith"><a href="#resumeCancellableWith" class="headerlink" title="resumeCancellableWith"></a>resumeCancellableWith</h3><p>最终来到了<code>resumeCancellableWith</code>方法，查看它的源码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> Continuation<span class="type">&lt;T&gt;</span>.<span class="title">resumeCancellableWith</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;,</span></span></span><br><span class="line"><span class="params"><span class="function">    onCancellation: ((<span class="type">cause</span>: <span class="type">Throwable</span>) -&gt; <span class="type">Unit</span>)? = <span class="literal">null</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>: <span class="built_in">Unit</span> = <span class="keyword">when</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">    <span class="keyword">is</span> DispatchedContinuation -&gt; resumeCancellableWith(result, onCancellation)</span><br><span class="line">    <span class="keyword">else</span> -&gt; resumeWith(result)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>继续跟进<code>DispatchedContinuation</code>的<code>resumeCancellableWith</code>方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="keyword">class</span> <span class="title class_">DispatchedContinuation</span>&lt;<span class="type">in T</span>&gt;(</span><br><span class="line">    <span class="keyword">val</span> dispatcher: CoroutineDispatcher,</span><br><span class="line">    <span class="keyword">val</span> continuation: Continuation&lt;T&gt;</span><br><span class="line">) : DispatchedTask&lt;T&gt;(MODE_UNINITIALIZED), Continuation&lt;T&gt; <span class="keyword">by</span> continuation &#123;</span><br><span class="line">    <span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeCancellableWith</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;,</span></span></span><br><span class="line"><span class="params"><span class="function">        <span class="keyword">noinline</span> onCancellation: ((<span class="type">cause</span>: <span class="type">Throwable</span>) -&gt; <span class="type">Unit</span>)?</span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (dispatcher.isDispatchNeeded(context)) &#123;</span><br><span class="line">            dispatcher.dispatch(context, <span class="keyword">this</span>)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            resumeUndispatchedWith(result)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeUndispatchedWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;)</span></span> &#123;</span><br><span class="line">        continuation.resumeWith(result)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，<code>DispatchedContinuation</code>会首先让调度器去判断是否需要调度，所谓的调度即为切线程环境。</p>
+<ul>
+<li>如果需要调度，就让调度器去切线程，并把需要执行的代码——协程体一并传进去，以便新的线程能够执行；</li>
+<li>如果不需要调度，则马上执行协程体。</li>
+</ul>
+<blockquote>
+<p>事实上调度器是对执行者的一个封装，所谓的执行者就是真正执行协程体的线程。</p>
+<ul>
+<li>例如基于事件循环的主线程调度器<code>Dispatchers.Main</code>；</li>
+<li>又如基于线程池的IO调度器、Default调度器；</li>
+</ul>
+<p>不论何种调度器，最终执行的代码都会被<code>Runnable</code>所封装，<code>DispatchedContinuation</code>正是实现<code>Runnable</code>并重写了run方法。所以在调度的时候，第二个<code>Runnable</code>参数才能传入<code>DispatchedContinuation</code>本身。而这个最终被执行的代码，就是协程体本身。</p>
+</blockquote>
+<p>不管是否会被调度，最终都会执行<code>DispatchedContinuation.continuation</code>的<code>resumeWith</code>方法。这个continuation是什么？结合上文的分析，我们知道Kotlin协程使用套娃的方式，一个<code>Continuation</code>套另一个<code>Continuation</code>。所以，最终各个<code>Continuation</code>的调用关系如下，向下调用，向上回溯：</p>
+<p><img src="/kotlin-coroutine-launch/wrap_continuation_call_and_back.drawio.png"></p>
+<p>这里的continuation就是<code>BaseContinuationImpl</code>，跟进它的resumeWith方法（精简了代码）：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">BaseContinuationImpl</span> &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">Any</span>?&gt;)</span></span> &#123;</span><br><span class="line">        <span class="keyword">var</span> param = result</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">val</span> outcome: Result&lt;Any?&gt; = <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">val</span> outcome = invokeSuspend(param)</span><br><span class="line">            <span class="keyword">if</span> (outcome === COROUTINE_SUSPENDED) <span class="keyword">return</span></span><br><span class="line">            Result.success(outcome)</span><br><span class="line">        &#125; <span class="keyword">catch</span> (exception: Throwable) &#123;</span><br><span class="line">            Result.failure(exception)</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        completion.resumeWith(outcome)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>读完简化后的代码后，可以发现关键点就在于<code>invokeSuspend</code>方法。invokeSuspend方法由我们传入的suspend lambda表达式提供，是通过编译器生成的synthetic方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">SuspendLambdaAnonymousClass</span> <span class="keyword">extends</span> <span class="title class_">SuspendLambda</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> Object <span class="title function_">invokeSuspend</span><span class="params">(Object param1Object)</span> &#123;</span><br><span class="line">      ...</span><br><span class="line">      ResultKt.throwOnFailure(param1Object);</span><br><span class="line">      System.out.println(<span class="string">&quot;Hello Kotlin Coroutine!&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> Unit.INSTANCE;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此时便真正的执行到了协程体，打印出了字符串。</p>
+<p>然后调用栈就来到了<code>AbstractCoroutine</code>。<code>AbstractCoroutine</code>会处理状态扭转以及协调父子协程，保证当前协程的所有子协程完成后，才会去结束当前协程。这里不过多赘述。</p>
+<p>此后<code>Continuation</code>调用栈层层回溯，直至结束，协程体执行完成，协程扭转为完成的状态。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>协程的启动并不复杂，只是编译器生成了一些synthetic方法，使得调用栈较难追踪，不过我们可以从反编译出来的代码中寻找到蛛丝马迹，理解Kotlin协程的启动和执行流程。</p>
+<p>理解协程的启动与执行的关键之一在于：被suspend关键词修饰的lambda，都是<code>BaseContinuationImpl</code>的子类型。<code>BaseContinuationImpl</code>有一个重要的方法，就是<code>resumeWith</code>方法，是从<code>Continuation</code>实现而来的。</p>
+<p>但<code>resumeWith</code>只管恢复，还没有一个引信来触发协程体的执行。这又引出了<code>BaseContinuationImpl</code>的第二个重要方法：<code>invokeSuspend</code>。</p>
+<p><code>invokeSuspend</code>是abstract的，必须要被重写。从结果来看，我们只是传入了一个suspend lambda参数，并没有重写这个方法；协程体的直接父类<code>SuspendLambda</code>（实现了<code>BaseContinuationImpl</code>）也没有重写这个方法。我们就能很自然的想到这个方法是编译器偷偷帮我们生成的。</p>
+<p>编译器生成的依据就是我们写在协程体内的代码。本文的例子是打印一个字符串，所以编译器也会为我们生成打印字符串的代码。</p>
+<p>那如果遇上suspend方法，要怎么生成呢？或者更抽象的，编译器是如何根据协程体内的代码来生成<code>invokeSupspend</code>方法的呢？这就涉及到了协程的<strong>非阻塞式挂起</strong>问题。</p>
+<p>这篇文章简单的跟踪了Kotlin协程的启动和执行流程，为我接下来理解协程的<strong>非阻塞式挂起</strong>以及启动模式做了铺垫。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/kotlin-coroutine-exception/" data-toggle="tooltip" data-placement="top" title="浅谈Kotlin协程(4)">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/kotlin-coroutine-context/" data-toggle="tooltip" data-placement="top" title="浅谈Kotlin协程(1)">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/kotlin-coroutine-launch/";
+    var disqus_url = "https://spirytusz.co/kotlin-coroutine-launch/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

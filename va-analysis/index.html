@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          浅谈虚拟框架VirtualApp原理 &amp; 检测方案 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/va-analysis/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.jpg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                        
+                          <a class="tag" href="/tags/#插件化" title="插件化">插件化</a>
+                        
+                    </div>
+                    <h1>浅谈虚拟框架VirtualApp原理 &amp; 检测方案</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by spirytusz on
+                        2022-01-04
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><a href="https://github.com/asLody/VirtualApp">VirtualApp</a>是一款运行于Android系统的虚拟框架，允许在其中创建虚拟空间，并在这个虚拟空间中运行其他应用，并对该应用具有完全的控制能力。</p>
+<p>本文将配合VirtualApp的源码，简单介绍VirtualApp免安装启动apk的Activity的基本原理，以及相关的检测方案。</p>
+<h1 id="名词约定"><a href="#名词约定" class="headerlink" title="名词约定"></a>名词约定</h1><table>
+<thead>
+<tr>
+<th>名词</th>
+<th>简称</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>VirtualApp</td>
+<td>VA</td>
+<td>-</td>
+</tr>
+<tr>
+<td>VActivityManager</td>
+<td>VAM</td>
+<td>VirtualApp自身的ActivityManger</td>
+</tr>
+<tr>
+<td>VActivityManagerService</td>
+<td>VAMS</td>
+<td>VirtualApp自身的ActivityMangerService</td>
+</tr>
+<tr>
+<td>VPackageManager</td>
+<td>VPM</td>
+<td>VirtualApp自身的PackageManager</td>
+</tr>
+<tr>
+<td>VPackageManagerService</td>
+<td>VPMS</td>
+<td>VirtualApp自身的PackageManagerService</td>
+</tr>
+<tr>
+<td>ActivityManager</td>
+<td>AM</td>
+<td>android sdk 的ActivityManger</td>
+</tr>
+<tr>
+<td>ActivityManagerService</td>
+<td>AMS</td>
+<td>android sdk 的ActivityMangerService</td>
+</tr>
+<tr>
+<td>PackageManager</td>
+<td>PM</td>
+<td>android sdk 的PackageManager</td>
+</tr>
+<tr>
+<td>PackageManagerService</td>
+<td>PMS</td>
+<td>android sdk 的PackageManagerService</td>
+</tr>
+<tr>
+<td>虚拟应用</td>
+<td>-</td>
+<td>运行在VirtualApp内的应用</td>
+</tr>
+</tbody></table>
+<h1 id="几个问题"><a href="#几个问题" class="headerlink" title="几个问题"></a>几个问题</h1><p>在一个虚拟空间内免安装启动apk的Activity，从VA作者的角度来看，他需要做什么，我觉得不过以下几个问题：</p>
+<ol>
+<li>如何解析apk包内的四大组件信息？</li>
+<li>启动应用时，如何解决代码加载和资源加载的问题？</li>
+<li>启动应用后，如何启动四大组件？</li>
+<li>启动应用后，如何实现对app的完全Hook能力？</li>
+</ol>
+<p>下面开始分析VirtualApp的安装和启动流程，以解答上面的问题。</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>在VA内部安装虚拟应用，最终会调用VPMS的<code>installPackage</code>方法，这里撇去兼容性代码，保留关键流程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">// VPackageInstallerService</span><br><span class="line">public synchronized InstallResult installPackage(String path, int flags, boolean notify) &#123;</span><br><span class="line">    ...</span><br><span class="line">    File packageFile = new File(path);</span><br><span class="line">    ...</span><br><span class="line">    VPackage pkg = null;</span><br><span class="line">    try &#123;</span><br><span class="line">        // 1. 反射创建android.pm.PackageParser对象，解析出apk包的四大组件以及其他相关信息</span><br><span class="line">        // 保存在VPackage对象中</span><br><span class="line">        pkg = PackageParserEx.parsePackage(packageFile);</span><br><span class="line">    &#125; catch (Throwable e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    // 2. 把so库复制到/data/data/io.virtualapp/virtual/$packageName/lib 目录下</span><br><span class="line">    File appDir = VEnvironment.getDataAppPackageDirectory(pkg.packageName);</span><br><span class="line">    File libDir = new File(appDir, &quot;lib&quot;);</span><br><span class="line">    NativeLibraryHelperCompat.copyNativeBinaries(new File(path), libDir);</span><br><span class="line">    ...</span><br><span class="line">    // 3. 保存前面通过android.pm.PackageParser解析出来的信息</span><br><span class="line">    PackageParserEx.savePackageCache(pkg);</span><br><span class="line">    PackageCacheManager.put(pkg, ps);</span><br><span class="line">    ...</span><br><span class="line">    // 4. 把apk文件复制到/data/data/io.virtualapp/virtual/$packageName 目录下</span><br><span class="line">    File privatePackageFile = new File(appDir, &quot;base.apk&quot;);</span><br><span class="line">    FileUtils.copyFile(packageFile, privatePackageFile);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/%E5%AE%89%E8%A3%85%E6%B5%81%E7%A8%8B.drawio.png" alt="安装流程"></p>
+<p>可以看到，在VA内部安装虚拟应用，VA主要做了这几件事</p>
+<ol>
+<li>反射创建<code>android.pm.PackageParser</code>实例，解析虚拟应用apk包的四大组件以及其他信息；</li>
+<li>把so库复制到对应包的虚拟路径下；</li>
+<li>保存、持久化部分apk包数据到硬盘内；</li>
+<li>把apk包复制到对应的虚拟路径下；</li>
+</ol>
+<p>在内部安装虚拟应用，核心逻辑全部交给反射创建<code>android.pm.PackageParser</code>实例实现，VirtualApp只是做了so文件和apk文件的拷贝，并持久化了信息。</p>
+<p>其中需要持久化的信息包括appId、包名、so库路径等关键信息，方便下次启动时，重新使用<code>android.pm.PackageParser</code>实例解析内部安装应用信息。</p>
+<p>经过VA内部安装的逻辑，我们已经可以拿到虚拟应用内的四大组件信息，进而拿到启动的Intent，开始具备启动能力。接下来看看VirtualApp是如何处理启动的逻辑。</p>
+<h1 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h1><p>VA在启动的时候预埋了一些逻辑。一言以蔽之，VA通过注入实例 + 动态代理 + 四大组件插桩的形式，将虚拟应用运行在自己的进程内。先来看看VA预埋的代码：</p>
+<h2 id="注入对象"><a href="#注入对象" class="headerlink" title="注入对象"></a>注入对象</h2><p>启动虚拟应用的关键之一，就是对<code>ActivityThread.mH</code>的<code>mCallback</code>字段的实例进行替换:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">// HCallbackStub.java</span><br><span class="line">public class HCallbackStub implements Handler.Callback, IInjector &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void inject() throws Throwable &#123;</span><br><span class="line">        otherCallback = getHCallback();</span><br><span class="line">        // 将this，也就是HCallbackStub注入到ActivityThread的mH实例的mCallback字段中</span><br><span class="line">        mirror.android.os.Handler.mCallback.set(getH(), this);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    private static Handler getH() &#123;</span><br><span class="line">        // 获取单例ActivityThread的mH实例</span><br><span class="line">        return ActivityThread.mH.get(VirtualCore.mainThread());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static Handler.Callback getHCallback() &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            Handler handler = getH();</span><br><span class="line">            // 获取单例ActivityThread的mH实例中的mCallack实例</span><br><span class="line">            return mirror.android.os.Handler.mCallback.get(handler);</span><br><span class="line">        &#125; catch (Throwable e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    @Override</span><br><span class="line">    public boolean handleMessage(Message msg) &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，VA通过反射，注入自己实现的<code>Handler.Callback</code>到<code>ActivityThread.mH.mCallback</code>中，以达到</p>
+<ol>
+<li>拦截消息</li>
+<li>处理消息</li>
+<li>决定是否转发给mH</li>
+</ol>
+<p>的作用。</p>
+<p>通过<code>handleMessage</code>的返回值，可以决定是否转发给mH，具体原因看源码便可以知道：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">// Handler.java</span><br><span class="line">public void dispatchMessage(@NonNull Message msg) &#123;</span><br><span class="line">    if (msg.callback != null) &#123;</span><br><span class="line">        handleCallback(msg);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        if (mCallback != null) &#123;</span><br><span class="line">            if (mCallback.handleMessage(msg)) &#123;</span><br><span class="line">               // 通过callback 的 handleMessage返回值，可以决定是否转发给Handler</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        handleMessage(msg);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/va-analysis/HCallback_perview.drawio.png" alt="HCallback_perview.drawio.png"></p>
+<h2 id="动态代理"><a href="#动态代理" class="headerlink" title="动态代理"></a>动态代理</h2><p>注入实例可以做到方法拦截，是因为Handler对外提供了Callback接口，允许开发者对其执行流程进行控制。并不通用。动态代理更为通用一些，它能代理接口方法，并返回一个经过代理的实例给你。来看看VA使用动态代理做了什么。以Hook Activity启动为例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// MethodProxies.java</span><br><span class="line">class MethodProxies &#123;</span><br><span class="line">    static class StartActivity extends MethodProxy &#123;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        public String getMethodName() &#123;</span><br><span class="line">            return &quot;startActivity&quot;;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        public Object call(Object who, Method method, Object... args) throws Throwable &#123;</span><br><span class="line">            ...</span><br><span class="line">            int res = VActivityManager.get().startActivity(intent, activityInfo, resultTo, options, resultWho, requestCode, VUserHandle.myUserId());</span><br><span class="line">            ...</span><br><span class="line">            return res;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里省略了很多细节，只保留最关键的部分。可以看到，这里是对<code>startActivity </code>方法进行拦截，并把这个逻辑转发到VAM中。是对哪个实例的<code>startActivity </code>进行拦截? 看看初始化流程:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">// ActivityManagerStub.java</span><br><span class="line">// runtime级别的注解，运行时会把MethodProxies内所有的类实例化，并加到一个表里面</span><br><span class="line">@Inject(MethodProxies.class)</span><br><span class="line">public class ActivityManagerStub extends MethodInvocationProxy&lt;MethodInvocationStub&lt;IInterface&gt;&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void inject() throws Throwable &#123;</span><br><span class="line">        if (BuildCompat.isOreo()) &#123;</span><br><span class="line">            //Android Oreo(8.X)</span><br><span class="line">            // 拿到ActivityManager中的IActivityManagerSingleton对象</span><br><span class="line">            Object singleton = ActivityManagerOreo.IActivityManagerSingleton.get();</span><br><span class="line">            // 将这个对象的mInstance，替换成我们自己的代理对象，即ProxyInterface</span><br><span class="line">            Singleton.mInstance.set(singleton, getInvocationStub().getProxyInterface());</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            if (ActivityManagerNative.gDefault.type() == IActivityManager.TYPE) &#123;</span><br><span class="line">                // 同理</span><br><span class="line">                ActivityManagerNative.gDefault.set(getInvocationStub().getProxyInterface());</span><br><span class="line">            &#125; else if (ActivityManagerNative.gDefault.type() == Singleton.TYPE) &#123;</span><br><span class="line">                // 同理</span><br><span class="line">                Object gDefault = ActivityManagerNative.gDefault.get();</span><br><span class="line">                Singleton.mInstance.set(gDefault, getInvocationStub().getProxyInterface());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，这里实际上是将代理对象注入到<code>ActivityManager</code>内的单例<code>IActivityManagerSingleton</code>（8.0以下是<code>gDefault</code>）的<code>mInstance</code>字段中。通过注入代理对象，实现对指定方法：</p>
+<ol>
+<li>拦截；</li>
+<li>决定是否转发；</li>
+</ol>
+<p>的目的。</p>
+<h2 id="插桩四大组件"><a href="#插桩四大组件" class="headerlink" title="插桩四大组件"></a>插桩四大组件</h2><p>虚拟应用的四大组件，必然是没有声明到宿主应用的AndroidManifest中的。这就会带来一个问题，启动一个没有声明在AndroidManifest的组件，是会引起当前进程崩溃的。</p>
+<p>对此，VA的解决方法是，在AndroidManifest中声明了一些插桩用的四大组件，统共运行在100个进程内。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">&lt;activity</span><br><span class="line">    android:name=&quot;com.lody.virtual.client.stub.StubActivity$C0&quot;</span><br><span class="line">    android:configChanges=&quot;mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale&quot;</span><br><span class="line">    android:process=&quot;:p0&quot;</span><br><span class="line">    android:taskAffinity=&quot;com.lody.virtual.vt&quot;</span><br><span class="line">    android:theme=&quot;@style/VATheme&quot; /&gt;</span><br><span class="line"></span><br><span class="line">&lt;activity</span><br><span class="line">    android:name=&quot;com.lody.virtual.client.stub.StubActivity$C1&quot;</span><br><span class="line">    android:configChanges=&quot;mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale&quot;</span><br><span class="line">    android:process=&quot;:p1&quot;</span><br><span class="line">    android:taskAffinity=&quot;com.lody.virtual.vt&quot;</span><br><span class="line">    android:theme=&quot;@style/VATheme&quot; /&gt;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">&lt;provider</span><br><span class="line">    android:name=&quot;com.lody.virtual.client.stub.StubContentProvider$C0&quot;</span><br><span class="line">    android:authorities=&quot;$&#123;applicationId&#125;.virtual_stub_0&quot;</span><br><span class="line">    android:exported=&quot;false&quot;</span><br><span class="line">    android:process=&quot;:p0&quot; /&gt;</span><br><span class="line"></span><br><span class="line">&lt;provider</span><br><span class="line">    android:name=&quot;com.lody.virtual.client.stub.StubContentProvider$C1&quot;</span><br><span class="line">    android:authorities=&quot;$&#123;applicationId&#125;.virtual_stub_1&quot;</span><br><span class="line">    android:exported=&quot;false&quot;</span><br><span class="line">    android:process=&quot;:p1&quot; /&gt;</span><br><span class="line">    </span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+<p>Service的启动比较特殊，所以不需要声明桩Service。</p>
+<p>Broadcast也比较特殊，如果声明在AndroidManifest中，相当于静态注册了，所以没有声明桩Broadcast。</p>
+<p>在启动apk内的一个组件时，先根据其运行的进程新建桩组件，并把需要启动的apk组件信息序列化到桩组件的intent中，发送给AMS，然后经过AMS的操作后，调用桩组件进程的<code>IApplicationThread</code>，通过<code>Handler</code>切线程，到达<code>ActivityThread.mH</code>中，在走到VirtualApp实现埋好的<code>HCallbackStub</code>中，在<code>HCallbackStub</code>中，从intent中提取出真正需要启动的组件，然后启动即可。</p>
+<h2 id="获取可启动的Intent"><a href="#获取可启动的Intent" class="headerlink" title="获取可启动的Intent"></a>获取可启动的Intent</h2><p>这是调用VA的接口启动已经内部安装的虚拟应用示例代码。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public void launchTargetApp(String packageName, int userId) &#123;</span><br><span class="line">    Intent targetIntent = VirtualCore.get().getLaunchIntent(packageName, userId)</span><br><span class="line">    if (targetIntent != null) &#123;</span><br><span class="line">        VirtualCore.get().startActivity(intent)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先看看VA内部是如何获取具有启动能力的intent。<br>调用<code>VirtualCore. getLaunchIntent </code>，最终会走到<code>VPMS</code>的<code>queryIntentActivities</code>方法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">public List&lt;ResolveInfo&gt; queryIntentActivities(Intent intent, String resolvedType, int flags, int userId) &#123;</span><br><span class="line">    ...</span><br><span class="line">    // 尝试从intent内获取ComponentName</span><br><span class="line">    ComponentName comp = intent.getComponent();</span><br><span class="line">    ...</span><br><span class="line">    if (comp != null) &#123;</span><br><span class="line">        final List&lt;ResolveInfo&gt; list = new ArrayList&lt;ResolveInfo&gt;(1);</span><br><span class="line">        //     1. 在这里会通过VPMS内部维护的包列表，以component.packageName为key</span><br><span class="line">        // 获取对应activityInfo并返回</span><br><span class="line">        final ActivityInfo ai = getActivityInfo(comp, flags, userId);</span><br><span class="line">        if (ai != null) &#123;</span><br><span class="line">            final ResolveInfo ri = new ResolveInfo();</span><br><span class="line">            ri.activityInfo = ai;</span><br><span class="line">            list.add(ri);</span><br><span class="line">        &#125;</span><br><span class="line">        return list;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    final String pkgName = intent.getPackage();</span><br><span class="line">    if (pkgName == null) &#123;</span><br><span class="line">        // 2. 通过intent-filter，获取category为LAUNCHER的activityInfoList</span><br><span class="line">        return mActivities.queryIntent(intent, resolvedType, flags, userId);</span><br><span class="line">    &#125;</span><br><span class="line">    final VPackage pkg = mPackages.get(pkgName);</span><br><span class="line">    if (pkg != null) &#123;</span><br><span class="line">        // 3. 同样也是通过intent-filter，获取category为LAUNCHER的activityInfoList，只不过增加了包名的过滤条件</span><br><span class="line">        return mActivities.queryIntentForPackage(intent, resolvedType, flags, pkg.activities, userId);</span><br><span class="line">    &#125;</span><br><span class="line">    return Collections.emptyList();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里会有三种获取intent的逻辑</p>
+<ol>
+<li>指定component</li>
+<li>指定intent内部的intent-filter（通过intent.addCategory()指定）</li>
+<li>指定包名+指定intent-filter</li>
+</ol>
+<p>在<code>VirtualCore. getLaunchIntent </code>内部，指定了包名和值为LAUNCHER 的 category，所以这里会走第3种逻辑，根据给定的<code>VPackage </code>，过滤掉<code>category</code>不是<code>LAUNCHER</code>的activity，返回一个只有一个元素的List给调用方。</p>
+<p>获取了Intent之后，接下来就是调用VAMS启动activity了。</p>
+<h2 id="真正的启动逻辑"><a href="#真正的启动逻辑" class="headerlink" title="真正的启动逻辑"></a>真正的启动逻辑</h2><p>获取了具有启动能力的Intent后，调用<code>VirtualCore.startActivity</code>，最终调用了<code>VAMS</code>的<code>startActivity</code>方法，把启动任务交给了<code>ActivityStack</code>的<code>startActivityLocked</code>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">// VActivityManagerService.java</span><br><span class="line">int startActivityLocked(int userId, Intent intent, ActivityInfo info, IBinder resultTo, Bundle options,</span><br><span class="line">                        String resultWho, int requestCode) &#123;</span><br><span class="line">    TaskRecord reuseTask = null;</span><br><span class="line">    // 通过启动模式、Intent中所带的flags来确定可以在现有的哪个任务栈启动</span><br><span class="line">    ...</span><br><span class="line">    if (reuseTask == null) &#123;</span><br><span class="line">        // 没有可用的任务栈，就在新的任务栈中启动</span><br><span class="line">        startActivityInNewTaskLocked(userId, intent, info, options);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        // 把可用的任务栈移动到前台</span><br><span class="line">        mAM.moveTaskToFront(reuseTask.taskId, 0);</span><br><span class="line">        ...</span><br><span class="line">        // 根据ActivityInfo的processName，分配一个对应进程的桩activity</span><br><span class="line">        // 再将intent内的component替换成桩activity</span><br><span class="line">        // 启动桩activity所对应的进程</span><br><span class="line">        destIntent = startActivityProcess(userId, sourceRecord, intent, info);</span><br><span class="line">        // 在对应进程启动桩activity</span><br><span class="line">        // 最终调到realStartActivityLocked中</span><br><span class="line">        startActivityFromSourceTask(reuseTask, destIntent, info, resultWho, requestCode, options);</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private Intent startActivityProcess(int userId, ActivityRecord sourceRecord, Intent intent, ActivityInfo info) &#123;</span><br><span class="line">    // 根据activity的进程，分配一个进程</span><br><span class="line">    ProcessRecord targetApp = mService.startProcessIfNeedLocked(info.processName, userId, info.packageName);</span><br><span class="line">    ...</span><br><span class="line">    Intent targetIntent = new Intent();</span><br><span class="line">    // 根据进程的vpid，找到对应的桩activity</span><br><span class="line">    targetIntent.setClassName(VirtualCore.get().getHostPkg(), fetchStubActivity(targetApp.vpid, info));</span><br><span class="line">    ...</span><br><span class="line">    // 把原始的activityInfo保存到桩activity对应的intent中，这里是targetIntent</span><br><span class="line">    StubActivityRecord saveInstance = new StubActivityRecord(intent, info,</span><br><span class="line">            sourceRecord != null ? sourceRecord.component : null, userId);</span><br><span class="line">    saveInstance.saveToIntent(targetIntent);</span><br><span class="line">    return targetIntent;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private void realStartActivitiesLocked(IBinder resultTo, Intent[] intents, String[] resolvedTypes, Bundle options) &#123;</span><br><span class="line">    Class&lt;?&gt;[] types = IActivityManager.startActivities.paramList();</span><br><span class="line">    Object[] args = new Object[types.length];</span><br><span class="line">    ...</span><br><span class="line">    // 直接走本地的ActivityManager启动桩activity</span><br><span class="line">    IActivityManager.startActivities.call(ActivityManagerNative.getDefault.call(),</span><br><span class="line">                (Object[]) args);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里主要做了几件事：</p>
+<ol>
+<li>查询当前所有的任务栈，是否有可供这个activity启动的任务栈；</li>
+<li>没有就新建一个，有调AMS的方法把这个栈移到前台；</li>
+<li>根据activityInfo的包名和进程名，分配一个虚拟的pid，即为vpid；</li>
+<li>根据vpid，获取对应的桩Activity Intent；</li>
+<li>把需要启动的activity的信息塞入到这个intent中；</li>
+<li>调用AMS启动桩activity</li>
+</ol>
+<p>经过AMS的一系列操作，桩activity对应的进程已经启动。此时这个进程做了下面的事情：</p>
+<ol>
+<li>进入到ActivityThread的main方法中，调用attach通知AMS我已经启动了；</li>
+<li>AMS通过IBinder token回调，告诉这个进程需要启动桩activity；</li>
+<li>通过IPC回到桩activity进程的IApplicationThread；</li>
+<li>通过Handler回调到主线程，进入到预先埋好的HCallbackStub中</li>
+</ol>
+<p>此时逻辑走到了VirtualApp预先埋好的代码，来看看HCallbackStub做了什么：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">// HCallbackStub.java</span><br><span class="line">@Override</span><br><span class="line">public boolean handleMessage(Message msg) &#123;</span><br><span class="line">    if (LAUNCH_ACTIVITY == msg.what) &#123;</span><br><span class="line">        if (!handleLaunchActivity(msg)) &#123;</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return false;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private boolean handleLaunchActivity(Message msg) &#123;</span><br><span class="line">    Object r = msg.obj;</span><br><span class="line">    Intent stubIntent = ActivityThread.ActivityClientRecord.intent.get(r);</span><br><span class="line">    // 反序列化真正需要启动的activity信息</span><br><span class="line">    StubActivityRecord saveInstance = new StubActivityRecord(stubIntent);</span><br><span class="line">    Intent intent = saveInstance.intent;</span><br><span class="line">    ActivityInfo info = saveInstance.info;</span><br><span class="line">    ...</span><br><span class="line">    if (!VClientImpl.get().isBound()) &#123;</span><br><span class="line">        // apk的application还没有初始化，先初始化</span><br><span class="line">        // 主要是创建一个application实例，修改进程名，以及回调一些生命周期，等等；</span><br><span class="line">        VClientImpl.get().bindApplication(info.packageName, info.processName);</span><br><span class="line">        // 把这个消息插入到消息队列头部</span><br><span class="line">        getH().sendMessageAtFrontOfQueue(Message.obtain(msg));</span><br><span class="line">        // 不让Handler处理</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    // 将classloader设置进去</span><br><span class="line">    ClassLoader appClassLoader = VClientImpl.get().getClassLoader(info.applicationInfo);</span><br><span class="line">    intent.setExtrasClassLoader(appClassLoader);</span><br><span class="line">    // 替换intent</span><br><span class="line">    ActivityThread.ActivityClientRecord.intent.set(r, intent);</span><br><span class="line">    // 替换需要启动的Activity</span><br><span class="line">    ActivityThread.ActivityClientRecord.activityInfo.set(r, info);</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/va-analysis/HCallbackStub%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B.drawio.png" alt="HCallbackStub启动流程"></p>
+<p>在这里，HCallbackStub主要做了一下几件事：</p>
+<ol>
+<li>如果没有初始化application，初始化它；</li>
+<li>反序列化出真正需要启动的activity；</li>
+<li>初始化apk中的application，以及执行其他应用级别的逻辑；</li>
+<li>替换ActivityClientRecord中的intent和activityInfo</li>
+</ol>
+<p>至此，剩下的启动逻辑，都交由android sdk接管，是系统启动activity的流程。</p>
+<p>启动Activity中涉及到VA中的总流程：</p>
+<p><img src="/%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B.drawio.png" alt="启动流程.drawio.png"></p>
+<h1 id="问题解答"><a href="#问题解答" class="headerlink" title="问题解答"></a>问题解答</h1><p>回顾一下上文提出的问题</p>
+<ol>
+<li>如何解析apk包内的四大组件信息？</li>
+<li>启动应用时，如何解决代码加载和资源加载的问题？</li>
+<li>启动应用后，如何启动四大组件？</li>
+<li>启动应用后，如何实现对app的完全Hook能力？</li>
+</ol>
+<h2 id="解析apk包"><a href="#解析apk包" class="headerlink" title="解析apk包"></a>解析apk包</h2><p>解析apk的四大组件信息，VPMS通过调用android sdk内的<code>PackageParser</code>来解析apk内的四大组件信息，然后将包名、apk文件路径，so库文件路径序列化到本地，以供下次启动时重新调用<code>PackageParser </code>，恢复四大组件的信息。</p>
+<h2 id="代码加载"><a href="#代码加载" class="headerlink" title="代码加载"></a>代码加载</h2><p>解决代码加载问题，关键是拿到apk包所对应的LoadedApk对象的实例。</p>
+<p>LoadedApk是什么？</p>
+<p>LoadedApk对象是APK文件在内存中的表示。 Apk文件的相关信息，诸如Apk文件的代码和资源，甚至代码里面的Activity，Service等组件的信息我们都可以通过此对象获取。</p>
+<p>在启动四大组件前，VirtualApp会在HCallbackStub内检查apk的application是否有初始化，如果未初始化，则初始化它：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">// VClientImpl.java</span><br><span class="line">private void bindApplicationNoCheck(String packageName, String processName, ConditionVariable lock) &#123;</span><br><span class="line">    AppBindData data = new AppBindData();</span><br><span class="line">    // 初始化applicationInfo</span><br><span class="line">    data.appInfo = VPackageManager.get().getApplicationInfo(packageName, 0, getUserId(vuid));</span><br><span class="line">    // 初始化进程名</span><br><span class="line">    data.processName = processName;</span><br><span class="line">    ...</span><br><span class="line">    mBoundApplication = data;</span><br><span class="line">    // 获取包的context，这个context的classloader，能加载apk中的类</span><br><span class="line">    Context context = createPackageContext(data.appInfo.packageName);</span><br><span class="line">    ...</span><br><span class="line">    Object boundApp = fixBoundApp(mBoundApplication);</span><br><span class="line">    mBoundApplication.info = ContextImpl.mPackageInfo.get(context);</span><br><span class="line">    // 注入LoadedApk，</span><br><span class="line">    // data.info就是mBoundApplication.info，</span><br><span class="line">    // mBoundApplication.info就是context的mPackageInfo</span><br><span class="line">    mirror.android.app.ActivityThread.AppBindData.info.set(boundApp, data.info);</span><br><span class="line">    ...</span><br><span class="line">    // 初始化apk内的application</span><br><span class="line">    mInitialApplication = LoadedApk.makeApplication.call(data.info, false, null);</span><br><span class="line">    // 注入到ActivityThread中的mInitialApplication字段</span><br><span class="line">    mirror.android.app.ActivityThread.mInitialApplication.set(mainThread, mInitialApplication);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private Context createPackageContext(String packageName) &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        Context hostContext = VirtualCore.get().getContext();</span><br><span class="line">        // CONTEXT_INCLUDE_CODE 代表包括代码</span><br><span class="line">        // CONTEXT_IGNORE_SECURITY 代表忽略安全警告</span><br><span class="line">        return hostContext.createPackageContext(packageName, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);</span><br><span class="line">    &#125; catch (PackageManager.NameNotFoundException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">        VirtualRuntime.crash(new RemoteException());</span><br><span class="line">    &#125;</span><br><span class="line">    throw new RuntimeException();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/va-analysis/bindApplication%E6%B5%81%E7%A8%8B.drawio.png" alt="bindApplication流程"></p>
+<p>VA能够初始化apk包中的application，最关键的就是调用android sdk 的 <code>createPackageContext </code>方法。通过这个方法，可以拿到LoadedApk对象，进而初始化application。</p>
+<p>四大组件也大同小异，以Activity为例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">private boolean handleLaunchActivity(Message msg) &#123;</span><br><span class="line">    ActivityInfo info = saveInstance.info;</span><br><span class="line">    ...</span><br><span class="line">    // 这里把activityInfo给设置进去了</span><br><span class="line">    ActivityThread.ActivityClientRecord.activityInfo.set(r, info);</span><br><span class="line">    // 把这个message转发给mH处理</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里把activityInfo替换之后，转发给mH，mH转发给<code>performLaunchActivity</code>处理:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">/**  Core implementation of activity launch. */</span><br><span class="line">private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) &#123;</span><br><span class="line">    ActivityInfo aInfo = r.activityInfo;</span><br><span class="line">    if (r.packageInfo == null) &#123;</span><br><span class="line">        r.packageInfo = getPackageInfo(aInfo.applicationInfo, r.compatInfo,</span><br><span class="line">                Context.CONTEXT_INCLUDE_CODE);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    ContextImpl appContext = createBaseContextForActivity(r);</span><br><span class="line">    Activity activity = null;</span><br><span class="line">    java.lang.ClassLoader cl = appContext.getClassLoader();</span><br><span class="line">    // 通过classloader加载对应的activity类，然后反射创建</span><br><span class="line">    activity = mInstrumentation.newActivity(</span><br><span class="line">            cl, component.getClassName(), r.intent);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/va-analysis/activity%E5%88%9B%E5%BB%BA.drawio.png" alt="activity创建"></p>
+<p>同样这里也带上了<code>CONTEXT_INCLUDE_CODE</code>来加载<code>LoadedApk</code>对象，经过这个逻辑，便可以使用<code>LoadedApk</code>加载并初始化appContext，此时appContext的classloader，便有了加载activity类的能力。</p>
+<h2 id="资源加载"><a href="#资源加载" class="headerlink" title="资源加载"></a>资源加载</h2><p>资源加载的问题，LoadedApk也是关键。<br>在<code>performLaunchActivity</code>中，会为activity创建一个context：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"> /**  Core implementation of activity launch. */</span><br><span class="line">private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) &#123;</span><br><span class="line">    ActivityInfo aInfo = r.activityInfo;</span><br><span class="line">    if (r.packageInfo == null) &#123;</span><br><span class="line">        r.packageInfo = getPackageInfo(aInfo.applicationInfo, r.compatInfo,</span><br><span class="line">                Context.CONTEXT_INCLUDE_CODE);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    ContextImpl appContext = createBaseContextForActivity(r);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private ContextImpl createBaseContextForActivity(ActivityClientRecord r) &#123;</span><br><span class="line">    ContextImpl appContext = ContextImpl.createActivityContext(</span><br><span class="line">        this, r.packageInfo, r.activityInfo, r.token, displayId, r.overrideConfig);</span><br><span class="line">    ...</span><br><span class="line">    return appContext;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static ContextImpl createActivityContext(ActivityThread mainThread,</span><br><span class="line">        LoadedApk packageInfo, ActivityInfo activityInfo, IBinder activityToken, int displayId,</span><br><span class="line">        Configuration overrideConfiguration) &#123;</span><br><span class="line">    ...</span><br><span class="line">    // Create the base resources for which all configuration contexts for this Activity</span><br><span class="line">    // will be rebased upon.</span><br><span class="line">    context.setResources(resourcesManager.createBaseTokenResources(activityToken,</span><br><span class="line">            packageInfo.getResDir(),</span><br><span class="line">            splitDirs,</span><br><span class="line">            packageInfo.getOverlayDirs(),</span><br><span class="line">            packageInfo.getApplicationInfo().sharedLibraryFiles,</span><br><span class="line">            displayId,</span><br><span class="line">            overrideConfiguration,</span><br><span class="line">            compatInfo,</span><br><span class="line">            classLoader,</span><br><span class="line">            packageInfo.getApplication() == null ? null</span><br><span class="line">                    : packageInfo.getApplication().getResources().getLoaders()));</span><br><span class="line">    context.mDisplay = resourcesManager.getAdjustedDisplay(displayId,</span><br><span class="line">            context.getResources());</span><br><span class="line">    return context;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>资源同样也是依赖于LoadedApk，而LoadedApk已事先创建完毕，资源加载就能正常往下走。</p>
+<p><img src="/va-analysis/%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD.drawio.png" alt="资源加载"></p>
+<h2 id="Hook能力"><a href="#Hook能力" class="headerlink" title="Hook能力"></a>Hook能力</h2><p>因为虚拟应用是运行在VA自己的进程内，所以理论上是有完全Hook能力的。</p>
+<h1 id="检测"><a href="#检测" class="headerlink" title="检测"></a>检测</h1><p>通过阅读源码发现VA有以下特点：</p>
+<ol>
+<li>虚拟应用是运行在VA的进程内；</li>
+<li>appDir路径包含VA的appDir路径</li>
+<li>一些关键的对象被替换成了代理；</li>
+</ol>
+<p>（VA还有很多特点，这里仅列出一部分。）</p>
+<p>根据这三个特点，可以有如下方案，检测当前应用是否运行在VA下：</p>
+<h2 id="检测关键对象是否被替换"><a href="#检测关键对象是否被替换" class="headerlink" title="检测关键对象是否被替换"></a>检测关键对象是否被替换</h2><p>VA通过替换一些关键对象，实现对流程的控制，以AM为例，可以检测AM是否被替换：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">private fun isAmProxy(): Boolean &#123;</span><br><span class="line">    val clazz = Class.forName(&quot;android.app.ActivityManager&quot;)</span><br><span class="line">    val field = clazz.getDeclaredField(&quot;IActivityManagerSingleton&quot;)</span><br><span class="line">    field.isAccessible = true</span><br><span class="line">    val singleton = field.get(null)</span><br><span class="line">    val singletonClazz = Class.forName(&quot;android.util.Singleton&quot;)</span><br><span class="line">    val get = singletonClazz.getDeclaredMethod(&quot;get&quot;)</span><br><span class="line">    val am = get.invoke(singleton)</span><br><span class="line">    return am is Proxy</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>正常的环境，AM不可能是一个代理实例。通过判断AM是否是Proxy，便可直接判断环境是否正常。</p>
+<h2 id="检测同一个uid下的所有进程"><a href="#检测同一个uid下的所有进程" class="headerlink" title="检测同一个uid下的所有进程"></a>检测同一个uid下的所有进程</h2><p>VA将虚拟应用运行在它自己的进程下。通过这个特点，我们可以对当前同一个uid的进程进行遍历。如果出现了其他包的包名，就可以断定环境不正常：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">private fun runningBadEnvironment(): Boolean &#123;</span><br><span class="line">    val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager</span><br><span class="line">    val runningProcesses = am.runningAppProcesses</span><br><span class="line">    runningProcesses.forEach &#123;</span><br><span class="line">        // 这里可以加个白名单，防止误伤</span><br><span class="line">        if (!it.processName.contains(packageName)) &#123;</span><br><span class="line">            return true</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="检测appDir的所有父路径是否有读写权限"><a href="#检测appDir的所有父路径是否有读写权限" class="headerlink" title="检测appDir的所有父路径是否有读写权限"></a>检测appDir的所有父路径是否有读写权限</h2><p>VA将虚拟应用的dataDir目录放到其dataDir的子目录下。我们可以利用这一点来检测。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">private fun appDirAccessible() &#123;</span><br><span class="line">    var parent = File(dataDir.parent ?: &quot;&quot;)</span><br><span class="line">    var accessible = false</span><br><span class="line">    while (parent.absolutePath != File.separator) &#123;</span><br><span class="line">        accessible = accessible or parent.canRead()</span><br><span class="line">        parent = File(parent.parent ?: File.separator)</span><br><span class="line">    &#125;</span><br><span class="line">    return accessible</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里通过检查appDir目录的所有父目录是否有读权限。如果有读权限，说明环境不正常。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过以上介绍可以看出，VA通过替换系统本地代理，以及关键流程中的实例替换，提供虚拟应用运行时对外交互的能力，使得虚拟应用能够运行到自己的容器中，达到虚拟化的目的。</p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ol>
+<li><a href="https://github.com/asLody/VirtualApp">VirtualApp</a></li>
+<li><a href="http://weishu.me/2016/04/05/understand-plugin-framework-classloader/">Android 插件化原理解析——插件加载机制</a></li>
+<li><a href="http://weishu.me/2016/03/21/understand-plugin-framework-activity-management/">Android 插件化原理解析——Activity生命周期管理</a></li>
+<li><a href="https://bbs.pediy.com/thread-255212.htm">Android 应用多开对抗实践</a></li>
+</ol>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/android-view-startup/" data-toggle="tooltip" data-placement="top" title="Android View体系 - 启动篇">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/gson-analysis/" data-toggle="tooltip" data-placement="top" title="Gson原理分析">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/va-analysis/";
+    var disqus_url = "https://spirytusz.co/va-analysis/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

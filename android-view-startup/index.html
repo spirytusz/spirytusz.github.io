@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          Android View体系 - 启动篇 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/android-view-startup/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.webp')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                        
+                    </div>
+                    <h1>Android View体系 - 启动篇</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2022-03-12
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>点击Launcher的应用图标，到应用的主页展示到屏幕的过程中，Android系统是如何将画面渲染出来的？</p>
+<p>本文将分析应用启动时View相关的代码，理解启动期间View的相关代码，理解<code>View</code>、<code>Window</code>、<code>WindowManager</code>、<code>ViewRootImpl</code>和<code>Activity</code>之间的关系。</p>
+<h1 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h1><p>我们都知道Android应用进程的入口是<code>ActivityThread</code>的main方法。在经过与<code>system_server</code>的一系列IPC交互后，最终AMS会发起<code>EXECUTE_TRANSACTION</code>的命令，启动category为<code>android.intent.category.LAUNCHER</code>的Activity，走到了<code>ActivityThread.performLaunchActivity</code>方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ActivityThread.java</span></span><br><span class="line"><span class="keyword">private</span> Activity <span class="title function_">performLaunchActivity</span><span class="params">(ActivityClientRecord r, Intent customIntent)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    activity.attach(...);</span><br><span class="line">    ...</span><br><span class="line">    mInstrumentation.callActivityOnCreate(...);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从源码可以看到，在应用启动时，会调用到Activity的attach方法，之后马上就会回调Activity的onCreate方法，看看attach内部做了什么：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Activity.java</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">attach</span><span class="params">(...)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    mWindow = <span class="keyword">new</span> <span class="title class_">PhoneWindow</span>(...);</span><br><span class="line">    ...</span><br><span class="line">    mWindow.setWindowManager(</span><br><span class="line">        (WindowManager)context.getSystemService(Context.WINDOW_SERVICE),</span><br><span class="line">        ...</span><br><span class="line">    );</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，调用到Activity的attach方法时，会为Activity创建一个<code>Window </code>，并为这个<code>Window </code>设置好<code>WindowManager </code>。</p>
+<p>设置的<code>WindowManager </code>是哪个类的实例？点进去看看：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Window.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setWindowManager</span><span class="params">(WindowManager wm, ...)</span> &#123;</span><br><span class="line">    mWindowManager = ((WindowManagerImpl)wm).createLocalWindowManager(<span class="built_in">this</span>);</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// WindowManagerImpl.java</span></span><br><span class="line"><span class="keyword">private</span> <span class="title function_">WindowManagerImpl</span><span class="params">(Context context, Window parentWindow)</span> &#123;</span><br><span class="line">    mContext = context;</span><br><span class="line">    mParentWindow = parentWindow;</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> WindowManagerImpl <span class="title function_">createLocalWindowManager</span><span class="params">(Window parentWindow)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">WindowManagerImpl</span>(mContext, parentWindow);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原来<code>WindownManager </code>是通过<code>WindowManagerImpl</code>的<code>createLocalWindowManager</code>创建而来的，而<code>WindowManagerImpl</code>的parentWindow，就是上面Activity在attach时创建的Window，即<code>PhoneWIndow</code>。</p>
+<p>此后，performLaunchActivity结束，Activity的状态置为<code>ON_CREATE</code>。</p>
+<p>AMS又再发起<code>EXECUTE_TRANSACTION</code>的命令，回调Activity的onStart方法，此时Activity开始可见:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ActivityThread.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleStartActivity</span><span class="params">(...)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    updateVisibility(r, <span class="literal">true</span> <span class="comment">/* show */</span>);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>至此，Activity开始可见，准备开始获取焦点。</p>
+<h1 id="获取焦点"><a href="#获取焦点" class="headerlink" title="获取焦点"></a>获取焦点</h1><p>AMS发起<code>EXECUTE_TRANSACTION </code>的命令，试图将Activity的生命周期扭转为<code>RESUMED </code>状态，于是代码就走到了<code>ActivityThread</code>的<code>handleResumeActivity</code>方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ActivityThread.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleResumeActivity</span><span class="params">(...)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (r.window == <span class="literal">null</span> &amp;&amp; !a.mFinished &amp;&amp; willBeVisible) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">Activity</span> <span class="variable">a</span> <span class="operator">=</span> r.activity;</span><br><span class="line">        ...</span><br><span class="line">        <span class="type">View</span> <span class="variable">decor</span> <span class="operator">=</span> r.window.getDecorView();</span><br><span class="line">        ...</span><br><span class="line">        <span class="type">ViewManager</span> <span class="variable">wm</span> <span class="operator">=</span> a.getWindowManager();</span><br><span class="line">        WindowManager.<span class="type">LayoutParams</span> <span class="variable">l</span> <span class="operator">=</span> r.window.getAttributes();</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">if</span> (!a.mWindowAdded) &#123;</span><br><span class="line">            wm.addView(decor, l);</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在<code>handleResumeActivity</code>中，从启动的activity中获取<code>DecorView</code>和<code>WindowManager</code>之后，会将<code>DecorView </code>纳入<code>WindowManager</code>的管理。看看addView内部做了什么：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// WindowManagerImpl.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addView</span><span class="params">(<span class="meta">@NonNull</span> View view, <span class="meta">@NonNull</span> ViewGroup.LayoutParams params)</span> &#123;</span><br><span class="line">    mGlobal.addView(view, params, mParentWindow, ...);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>mGlobal是<code>WindowManagerGlobal </code>，如其命名，是一个进程下的全局WindowManager，维护<code>View</code>和<code>Window</code>的关系。<br>看看<code>WindowManagerGlobal </code>的addView内部做了什么：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// WindowManagerGlobal.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addView</span><span class="params">(View view, ViewGroup.LayoutParams params, ...)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">ViewRootImpl</span> <span class="variable">root</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ViewRootImpl</span>(view.getContext(), display);</span><br><span class="line">    ...</span><br><span class="line">    mViews.add(view);</span><br><span class="line">    mRoots.add(root);</span><br><span class="line">    ...</span><br><span class="line">    root.setView(view, wparams, ...);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>WindowManagerGlobal</code>内部创建了一个<code>ViewRootImpl</code>实例，并把view，也就是<code>DecorView</code>给设置到<code>ViewRootImpl</code>里面去。setView十分重要，内部请求重新布局，并且Window开始获取焦点：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setView</span><span class="params">(View view, WindowManager.LayoutParams attrs, ...)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Schedule the first layout -before- adding to the window</span></span><br><span class="line">    <span class="comment">// manager, to make sure we do the relayout before receiving</span></span><br><span class="line">    <span class="comment">// any other events from the system.</span></span><br><span class="line">    requestLayout();</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 获取焦点，最终回调DecorView的onWindowFocusChanged</span></span><br><span class="line">    mWindowSession.addToDisplayAsUser(...);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>经过<code>WindowSession</code>的addToDispalyAsUser方法后，Window获取到了焦点，回调到<code>DecorView </code>的onWindowFocusChanged。在获取焦点前，有一个关键的requestLayout方法，内部<code>Choregrapher</code>请求VSync信号后，就开始的View的三大流程：测量、布局和绘制。先看看VSync信号的请求流程。</p>
+<h1 id="VSync信号"><a href="#VSync信号" class="headerlink" title="VSync信号"></a>VSync信号</h1><p>requestLayout十分重要，内部先开启Handler的同步屏障，而后<code>Choregrapher</code>开始等待vsync信号，信号到达，回调<code>TraversalRunnable</code>，开始执行View树的遍历：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">requestLayout</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    scheduleTraversals();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">scheduleTraversals</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    mTraversalBarrier = mHandler.getLooper().getQueue().postSyncBarrier();</span><br><span class="line">    mChoreographer.postCallback(Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, <span class="literal">null</span>);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TraversalRunnable</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        doTraversal();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关键在postCallback，<code>Choregrapher</code>会在合适的时机回调<code>TrasversalRunnable</code>，会在什么时机？点进去看看：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Choregrapher.java</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">postCallbackDelayedInternal</span><span class="params">(<span class="type">int</span> callbackType, ...)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    mCallbackQueues[callbackType].addCallbackLocked(...);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (dueTime &lt;= now) &#123;</span><br><span class="line">        scheduleFrameLocked(now);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">scheduleFrameLocked</span><span class="params">(<span class="type">long</span> now)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    scheduleVsyncLocked();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> FrameDisplayEventReceiver mDisplayEventReceiver;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">scheduleVsyncLocked</span><span class="params">()</span> &#123;</span><br><span class="line">    mDisplayEventReceiver.scheduleVsync();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">FrameDisplayEventReceiver</span> <span class="keyword">extends</span> <span class="title class_">DisplayEventReceiver</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码可以看出，postCallback内部调用到了scheduleFrameLocked，请求VSync信号。<code>mDisplayEventReceiver</code>内部调用了native方法，在此不做赘述。</p>
+<p>VSync信号到达，会回调到<code>FrameDisplayEventReceiver</code>的onVsync方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Choregrapher.FrameDisplayEventReceiver.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onVsync</span><span class="params">(<span class="type">long</span> timestampNanos, <span class="type">long</span> physicalDisplayId, <span class="type">int</span> frame)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">Message</span> <span class="variable">msg</span> <span class="operator">=</span> Message.obtain(mHandler, <span class="built_in">this</span>);</span><br><span class="line">    msg.setAsynchronous(<span class="literal">true</span>);</span><br><span class="line">    mHandler.sendMessageAtTime(msg, timestampNanos / TimeUtils.NANOS_PER_MS);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    doFrame(...);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>VSync信号到达，<code>FrameDisplayEventReceiver</code>会发送一个带有callback的异步消息到Handler中，而后就会回调到<code>FrameDisplayEventReceiver</code>的run方法，执行<code>Choregrapher</code>的doFrame方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Choregrapher.java</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">doFrame</span><span class="params">(...)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    doCallbacks(Choreographer.CALLBACK_TRAVERSAL, frameTimeNanos);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">doCallback</span><span class="params">(<span class="type">int</span> callbackType, <span class="type">long</span> frameTimeNanos)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    callbacks = mCallbackQueues[callbackType] ...;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">CallbackRecord</span> <span class="variable">c</span> <span class="operator">=</span> callbacks; c != <span class="literal">null</span>; c = c.next) &#123;</span><br><span class="line">         ...</span><br><span class="line">         c.run(frameTimeNanos);</span><br><span class="line">         ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在doFrame内部调用到doCallbacks，doCallbacks内部<code>Choregrapher</code>会找到<code>CALLBACK_TRAVERSAL</code>类型的callback，并回调他的run方法，在<code>CallbackRecord </code>内部会调用到真正的callback，也就是前面传入的<code>mTraversalRunnable </code>。</p>
+<p>至此，开始调用<code>ViewRootImpl </code>的doTraversal方法，进一步调用performTraversal方法，正式进入View的三大流程: 测量、布局以及绘制：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewRootImpl.java</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">doTraversal</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    mHandler.getLooper().getQueue().removeSyncBarrier(mTraversalBarrier);</span><br><span class="line">    ...</span><br><span class="line">    performTraversals();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">performTraversals</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    performMeasure();</span><br><span class="line">    ...</span><br><span class="line">    performLayout();</span><br><span class="line">    ...</span><br><span class="line">    performDraw();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>从上面的分析可知，一个<code>Activity</code>对应一个<code>Window</code>，这个<code>Window</code>就是<code>PhoneWindow</code>，而其管理类便是<code>WindowManager</code>，对应<code>WindowManagerImpl</code>。这个<code>WindowManagerImpl</code>内部持有一个<code>WindowManagerGlobal</code>，统一管理当前应用进程的所有<code>Window </code>。</p>
+<p>在<code>Activity</code>的Resume阶段，通过<code>WindowManagerGlobal</code>的addView将<code>DecorView</code>和<code>ViewRootImpl</code>绑定在一起，形成一个View树，最终调用requestLayout，启动View（<code>DecorView</code>）的三大流程：测量、布局以及绘制。</p>
+<p>在启动阶段的整体流程：</p>
+<ol>
+<li>在<code>Activity</code>回调onCreate前，<code>ActivityThread</code>会为<code>Activity</code>创建一个<code>Window</code>，并为这个<code>Window</code>设置一个<code>WindowManager</code>;</li>
+<li>在<code>Activity</code>回调onStart后，<code>ActivityThread</code>会把这个<code>Activity</code>设置为可见；</li>
+<li>在<code>Activity</code>回调onResume后，会通过<code>WindowManagerGlobal</code>创建一个<code>ViewRootImpl</code>，此后通过<code>ViewRootImpl</code>请求第一次布局，在通过<code>Choregrapher</code>请求第一次VSync信号；之后收到VSync信号后，执行performTraversals，正式进入View的三大流程: 测量、布局以及绘制。</li>
+</ol>
+<p><img src="/android-view-startup/android-view-startup.drawio.png" alt="android-view-startup"></p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/android-view-perform-traversals/" data-toggle="tooltip" data-placement="top" title="Android View体系 - performTraversals篇">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/va-analysis/" data-toggle="tooltip" data-placement="top" title="浅谈虚拟框架VirtualApp原理 & 检测方案">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/android-view-startup/";
+    var disqus_url = "https://spirytusz.co/android-view-startup/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

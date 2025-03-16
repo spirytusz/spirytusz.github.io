@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          浅谈Kotlin协程(4) - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/kotlin-coroutine-exception/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('cover.webp')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#Kotlin" title="Kotlin">Kotlin</a>
+                        
+                          <a class="tag" href="/tags/#Coroutine" title="Coroutine">Coroutine</a>
+                        
+                    </div>
+                    <h1>浅谈Kotlin协程(4)</h1>
+                    <h2 class="subheading">异常处理</h2>
+                    <span class="meta">
+                        Posted by SpirytusZ on
+                        2022-08-29
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>挂起函数提供了切换调用栈后自动切回来的能力。那么</p>
+<ol>
+<li>这对挂起函数异常的捕获有何影响？</li>
+<li>当协程发生异常时，协程内如何传递异常？</li>
+<li>协程间如何传播异常？</li>
+</ol>
+<p>本文是我对《深入理解Kotlin协程》的读书笔记，记录我对协程异常处理的理解。</p>
+<h1 id="协程内的异常捕获"><a href="#协程内的异常捕获" class="headerlink" title="协程内的异常捕获"></a>协程内的异常捕获</h1><p>在实践中我们可以使用try-catch语句包裹需要捕获异常的代码，但如果被包裹的代码涉及到调用栈的切换，则捕获不了：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">crashAtEventLoop</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        handler.post &#123; <span class="number">1</span> / <span class="number">0</span> &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span>(t: Throwable) &#123;</span><br><span class="line">        t.printStackTrace()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">crashAtThreadSwitch</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        threadPool.execute &#123; <span class="number">1</span> / <span class="number">0</span> &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span>(t: Throwable) &#123;</span><br><span class="line">        t.printStackTrace()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们知道挂起函数内部有可能切换调用栈。如果挂起函数内部切换了调用栈，并且在另一个调用栈发生了异常，会如何表现？</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">testCrash</span><span class="params">()</span></span> &#123;</span><br><span class="line">    GlobalScope.launch &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            suspendFunc()</span><br><span class="line">        &#125; <span class="keyword">catch</span> (t: Throwable) &#123;</span><br><span class="line">            Log.e(TAG, <span class="string">&quot;testCrash: <span class="variable">$t</span>&quot;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">suspendFunc</span><span class="params">()</span></span> = suspendCoroutine&lt;<span class="built_in">Int</span>&gt; &#123;</span><br><span class="line">    thread &#123;</span><br><span class="line">        it.resume(<span class="number">1</span>/<span class="number">0</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用<code>testCrash</code>后必会抛出未被捕获的异常而崩溃，崩溃点在第13行。这是合理的，因为崩溃发生在挂起函数切换调用栈后，切回调用栈前，是协程框架所干预不到的地方。</p>
+<p>考虑到<code>Continuation</code>的<code>resumeWith</code>方法接受的是一个<code>kotlin.Result</code>参数，我们不妨使用<code>kotlin.runCatching</code>包裹住另一个调用栈，发生异常时返回<code>Result.Failure</code>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">suspendFunc</span><span class="params">()</span></span> = suspendCoroutine&lt;<span class="built_in">Int</span>&gt; &#123; cont -&gt;</span><br><span class="line">    thread &#123;</span><br><span class="line">        runCatching &#123;</span><br><span class="line">            cont.resumeWith(<span class="number">1</span>/<span class="number">0</span>)</span><br><span class="line">        &#125;.onFailure &#123;</span><br><span class="line">            cont.resumeWithException(it)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>改造完毕后，再执行一遍，发现异常在<code>testCrash</code>方法中被捕获了。因此我们可以得出一个结论，在另一个调用栈的异常需要通过<code>Continuation.resumeWith</code>方法传递，才能在恢复时挂起点处抛出并捕获。</p>
+<h1 id="协程内的异常传递"><a href="#协程内的异常传递" class="headerlink" title="协程内的异常传递"></a>协程内的异常传递</h1><p>那么原因是什么呢？通过上篇文章<a href="../kotlin-coroutine-nonblocking-suspend">浅谈Kotlin协程(3)-非阻塞式挂起与恢复</a>，我们知道<code>suspendCoroutine</code>所暴露出来的<code>Continuation</code>是这么一个结构：</p>
+<p><img src="/kotlin-coroutine-exception/safe_continuation_wrap.drawio.png"></p>
+<p><code>SafeContinuation</code>的作用是保证<code>suspendCoroutine</code>所暴露的<code>Continuation</code>只调用一次；</p>
+<p><code>DispatchedContinuation</code>的作用是切线程环境；</p>
+<p>那么焦点就来到了<code>BaseContinuationImpl</code>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">BaseContinuationImpl</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">Any</span>?&gt;)</span></span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">val</span> outcome = invokeSuspend(param)</span><br><span class="line">            <span class="keyword">if</span> (outcome === COROUTINE_SUSPENDED) <span class="keyword">return</span></span><br><span class="line">            Result.success(outcome)</span><br><span class="line">        &#125; <span class="keyword">catch</span> (exception: Throwable) &#123;</span><br><span class="line">            Result.failure(exception)</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        completion.resumeWith(outcome)</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">CoroutineExceptionCatchTest</span>$1 &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> label = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">invokeSuspend</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">Any</span>?&gt;)</span></span>: Any? &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">if</span> (label == <span class="number">1</span>) &#123;</span><br><span class="line">            Result.throwOnFailure(result)</span><br><span class="line">            label = <span class="number">2</span></span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>BaseContinuationImpl.resumeWith</code>捕获了<code>invokeSuspend</code>中主动抛出的异常，将异常传递给了<code>StandaloneCoroutine</code>。</p>
+<p>查看<code>StandaloneCoroutine</code>的代码，发现它只重写了<code>handleJobException</code>方法。从这个方法的名字看来，就是它处理<code>BaseContinuationImpl</code>传递过来的异常。跟进这个方法：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">open</span> <span class="keyword">class</span> <span class="title class_">StandaloneCoroutine</span>(</span><br><span class="line">    parentContext: CoroutineContext,</span><br><span class="line">    active: <span class="built_in">Boolean</span></span><br><span class="line">) : AbstractCoroutine&lt;<span class="built_in">Unit</span>&gt;(...) &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">handleJobException</span><span class="params">(exception: <span class="type">Throwable</span>)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">        handleCoroutineException(context, exception)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">handleCoroutineException</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    context: <span class="type">CoroutineContext</span>, </span></span></span><br><span class="line"><span class="params"><span class="function">    exception: <span class="type">Throwable</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        context[CoroutineExceptionHandler]?.let &#123;</span><br><span class="line">            it.handleException(context, exception)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (t: Throwable) &#123;</span><br><span class="line">        handleCoroutineExceptionImpl(context, handlerException(exception, t))</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    handleCoroutineExceptionImpl(context, exception)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> handlers: List&lt;CoroutineExceptionHandler&gt; = ServiceLoader.load(</span><br><span class="line">    CoroutineExceptionHandler::<span class="keyword">class</span>.java,</span><br><span class="line">    CoroutineExceptionHandler::<span class="keyword">class</span>.java.classLoader</span><br><span class="line">).iterator().asSequence().toList()</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">handleCoroutineExceptionImpl</span><span class="params">(context: <span class="type">CoroutineContext</span>, exception: <span class="type">Throwable</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (handler <span class="keyword">in</span> handlers) &#123;</span><br><span class="line">        handler.handleException(context, exception)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> currentThread = Thread.currentThread()</span><br><span class="line">    currentThread.uncaughtExceptionHandler.uncaughtException(currentThread, exception)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>捕获的异常会按顺序传递给以下处理器处理。如果对应的处理器能够处理，则直接返回，否则就会传递给下一个处理器继续处理：</p>
+<ol>
+<li>注册在协程上下文中的<code>CoroutineExceptionHandler</code>；</li>
+<li>注册在<code>resources/META-INF/services</code>目录下，通过服务发现机制获取的<code>CoroutineExceptionHandler</code>；</li>
+<li><code>Thread.UncaughtExceptionHandler</code></li>
+</ol>
+<p>由于此时我们并没有注册<code>CoroutineExceptionHandler</code>，所以最终异常会交给<code>Thread.UncaughtExceptionHandler</code>处理，其结果就是抛出异常。而后在try-catch语句中再次被捕获，并打印出来。</p>
+<h1 id="协程的结构"><a href="#协程的结构" class="headerlink" title="协程的结构"></a>协程的结构</h1><h2 id="父子协程关系构建"><a href="#父子协程关系构建" class="headerlink" title="父子协程关系构建"></a>父子协程关系构建</h2><p>要想了解异常如何在协程间传播，我们需要了解协程之间的结构关系。协程是一个抽象的概念，在Kotlin中的具象化表达为<code>Job</code>，并且Kotlin协程标准库提供了使用<code>CoroutineScope</code>为receiver的启动方法。我们可以这么启动子协程：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> job0 = coroutineScope.launch &#123;</span><br><span class="line">    <span class="keyword">val</span> job1 = launch &#123;</span><br><span class="line">        delay(<span class="number">3000</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">val</span> job2 = launch &#123;</span><br><span class="line">        delay(<span class="number">2000</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    delay(<span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从直觉来看，很自然的就能知道三个job之间的关系，job1、job2是job0的子协程:<br><img src="/kotlin-coroutine-exception/parent_child_job_tree.drawio.png"></p>
+<p>事实上在标准库中的实现也确实是这个结构。父子协程关系的建立被标准库抽象成了<code>Job.attachChild</code>方法，在启动一个<code>Job</code>（即协程）时会与父<code>Job</code>建立父子关系。</p>
+<p>以<code>CoroutineScope.launch</code>启动的协程为例，内部新建了一个协程<code>AbstractCoroutine</code>，并在其构造方法中构建父子协程关系：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">AbstractCoroutine</span> : <span class="type">JobSupport</span>(...) &#123;</span><br><span class="line">    <span class="keyword">init</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (initParentJob) initParentJob(parentContext[Job])</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">open</span> <span class="keyword">class</span> <span class="title class_">JobSupport</span> : <span class="type">Job</span>, <span class="type">ChildJob</span>, <span class="type">ParentJob</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> parentHandle: ChildHandle?</span><br><span class="line"></span><br><span class="line">    <span class="keyword">protected</span> <span class="function"><span class="keyword">fun</span> <span class="title">initParentJob</span><span class="params">(parent: <span class="type">Job</span>?)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (parent == <span class="literal">null</span>) &#123;</span><br><span class="line">            parentHandle = NonDisposableHandle</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line">        parentHandle = parent.attachChild(<span class="keyword">this</span>)</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>attachChild</code>的真正实现在<code>JobSupport</code>内，它返回的是一个双向链表的节点；而这个双向链表的作用，是维护<strong>父Job</strong>下所有子协程的<code>Job</code>取消回调和<code>Job</code>完成回调。由于此时是子<code>Job</code>调用父<code>Job</code>的<code>attachChild</code>方法，所以我们把视角切换到父<code>Job</code>，跟进代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="keyword">class</span> <span class="title class_">JobSupport</span>  : <span class="type">Job</span>, <span class="type">ChildJob</span>, <span class="type">ParentJob</span> &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">attachChild</span><span class="params">(child: <span class="type">ChildJob</span>)</span></span>: ChildHandle &#123;</span><br><span class="line">        <span class="keyword">return</span> invokeOnCompletion(</span><br><span class="line">            onCancelling = <span class="literal">true</span>, </span><br><span class="line">            handler = ChildHandleNode(child).asHandler</span><br><span class="line">        ) <span class="keyword">as</span> ChildHandle</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">invokeOnCompletion</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        onCancelling: <span class="type">Boolean</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">        invokeImmediately: <span class="type">Boolean</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">        handler: <span class="type">CompletionHandler</span></span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: DisposableHandle &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于协程标准库使用无锁算法实现双向链表，所以在代码实现中充斥着大量的自旋操作。这里简化了部分代码，只保留关键部分。</p>
+<p>首先，<code>attachChild</code>方法其实是将传入的<code>childJob</code>包装成为了<code>ChildHandleNode</code>后，又去调用了<code>invokeOnComplete</code>方法。所谓的<code>ChildHandleNode</code>，我认为其实是父<code>Job</code>与子<code>Job</code>建立双向关系的连接点，具体其实现便能明白：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="keyword">class</span> <span class="title class_">ChildHandleNode</span>(</span><br><span class="line">    <span class="meta">@JvmField</span> <span class="keyword">val</span> childJob: ChildJob</span><br><span class="line">) : JobCancellingNode(), ChildHandle &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="keyword">val</span> parent: Job <span class="keyword">get</span>() = job</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">invoke</span><span class="params">(cause: <span class="type">Throwable</span>?)</span></span> = childJob.parentCancelled(job)</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">childCancelled</span><span class="params">(cause: <span class="type">Throwable</span>)</span></span>: <span class="built_in">Boolean</span> = job.childCancelled(cause)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其次，在<code>invokeOnComplete</code>方法内会构建一个双向链表的节点，然后根据当前<code>Job</code>的状态决定是否插入到双向链表中和返回该节点。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">open</span> <span class="keyword">class</span> <span class="title class_">JobSupport</span>  : <span class="type">Job</span>, <span class="type">ChildJob</span>, <span class="type">ParentJob</span> &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">invokeOnCompletion</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        onCancelling: <span class="type">Boolean</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">        invokeImmediately: <span class="type">Boolean</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">        handler: <span class="type">CompletionHandler</span></span></span></span><br><span class="line"><span class="params"><span class="function">    )</span></span>: DisposableHandle &#123;</span><br><span class="line">        <span class="keyword">val</span> node: JobNode = makeNode(handler, onCancelling)</span><br><span class="line">        loopOnState &#123; state -&gt;</span><br><span class="line">            <span class="keyword">when</span> (state) &#123;</span><br><span class="line">                <span class="keyword">is</span> Empty -&gt; &#123;</span><br><span class="line">                    _state.compareAndSet(state, node)</span><br><span class="line">                    <span class="keyword">return</span> node</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">is</span> Incomplete -&gt; &#123;</span><br><span class="line">                    <span class="keyword">val</span> list = state.list</span><br><span class="line">                    addLastAtomic(state, list, node)</span><br><span class="line">                    <span class="keyword">return</span> node</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span> -&gt; &#123;</span><br><span class="line">                    <span class="comment">// is complete</span></span><br><span class="line">                    <span class="keyword">return</span> NonDisposableHandle</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">addLastAtomic</span><span class="params">(<span class="keyword">expect</span>: <span class="type">Any</span>, list: <span class="type">NodeList</span>, node: <span class="type">JobNode</span>)</span></span> =</span><br><span class="line">        list.addLastIf(node) &#123; <span class="keyword">this</span>.state === <span class="keyword">expect</span> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>如果当前<code>Job</code>处于<code>Empty</code>状态（代表未完成，且没有任何回调，链表为空），就以创建的回调节点为链表头，并返回创建的节点；</li>
+<li>如果当前的<code>Job</code>处于<code>Incomplete</code>状态（代表未完成，但有回调，链表不为空），就调用<code>addLastAtomic</code>将新建的回调节点插入到维护在状态<code>state</code>内的双向链表中，并返回新建的节点；</li>
+<li>否则，当前<code>Job</code>已经完成了，则返回一个<code>NonDisposableHandle</code>，代表不会再对任何操作做出响应。</li>
+</ul>
+<p>此时<code>Job</code>父子关系已经构建完毕，其关键在于<code>Job</code>内部维护的状态<code>_state</code>。状态内部存储着一个双向链表，每个链表节点代表着父子<code>Job</code>沟通的桥梁<code>ChildHandleNode</code>，内部同时存储了父<code>Job</code>和子<code>Job</code>。</p>
+<p>光阅读代码略显抽象，不妨以上文的<code>job0</code>，<code>job1</code>和<code>job2</code>为例，使用<code>GlobalScope.launch</code>启动<code>job0</code>时，由于<code>job0</code>并没有父<code>Job</code>，所以<code>Job</code>构建父子关系的过程相对较为简单，其结果为：</p>
+<p><img src="/kotlin-coroutine-exception/job0_initial.drawio.png"></p>
+<p>由于<code>job0</code>的上下文<code>CoroutineContext</code>中没有<code>Job</code>，因此其<code>parentHandle</code>被初始化为<code>NonDisposableHandle</code>，然后直接返回。而<code>_state</code>则使用默认值<code>Empty</code>，代表没有任何的取消、完成回调。</p>
+<p>在<code>job0</code>运行的时候，启动了<code>job1</code>。由于启动<code>job1</code>的协程作用域<code>CoroutineScope</code>中存在<code>Job</code>（即<code>job0</code>），所以会执行父子关系构建的逻辑。<code>parentHandle</code>被设置为<code>ChildHandle</code>，内部指向了双向链表表头<code>ChildHandleNode</code>——维护<code>job0</code>与<code>job1</code>关系的桥梁。</p>
+<p>由于<code>job1</code>并没有子<code>Job</code>，所以其<code>parentHandle</code>被初始化为<code>NonDisposableHandle</code>，其<code>_state</code>为默认值，即<code>Empty</code>。</p>
+<p>因此，在<code>job1</code>启动后，协程间的关系为：</p>
+<p><img src="/kotlin-coroutine-exception/job0_with_job1.drawio.png"></p>
+<p><code>job1</code>启动完毕后，<code>job2</code>的启动过程也类似，我们可以如法炮制。当涉及到双向链表的插入操作时，<code>job0</code>与<code>job2</code>的桥梁——<code>ChildHandleNode</code>会被插入到表头之后。最终，在<code>job2</code>启动后，协程间的关系为：</p>
+<p><img src="/kotlin-coroutine-exception/job0_parent.drawio.png"></p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>协程在启动时，会去检查传入的协程上下文<code>CoroutineContext</code>中是否有<code>Job</code>的存在。如果存在<code>Job</code>，则认为是父<code>Job</code>，进而去初始化父子<code>Job</code>的关系；反之则跳过；</p>
+<p>在初始化父子<code>Job</code>关系时，子<code>Job</code>会调用父<code>Job</code>的<code>attachChild</code>，主动让父<code>Job</code>来attach自己。在<code>attachChild</code>的过程中，父<code>Job</code>会构建一个双向链表，每个节点为<code>ChildHandleNode</code>，存储父<code>Job</code>自己和对应的子<code>Job</code>，使得父<code>Job</code>和子<code>Job</code>能够双向通信。</p>
+<p>最终，父<code>Job</code>会将这个双向链表包装成<code>ChildHandle</code>，保存在<code>parentHandle</code>中。</p>
+<h1 id="异常传播"><a href="#异常传播" class="headerlink" title="异常传播"></a>异常传播</h1><p>了解完协程间的结构后，或许我们就能轻松理解异常在协程间传播的逻辑。在一个协程内，异常的传递类似于剥洋葱的方式，在被包了多层<code>Continuation</code>的洋葱结构内进行传播，最终被捕获的异常传递到了<code>AbstractCoroutine</code>的<code>resumeWith</code>方法中：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">AbstractCoroutine</span> &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">resumeWith</span><span class="params">(result: <span class="type">Result</span>&lt;<span class="type">T</span>&gt;)</span></span> &#123;</span><br><span class="line">        makeCompletingOnce(result.toState())</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>异常传播的关键全在<code>makeCompletingOnce</code>方法中，也是异常传播、协程取消等庞大逻辑的入口函数。其中的<code>Result.toState</code>方法，会将成功和失败包装成对应的类，方便后续对结果成功和结果失败的判断。我们进一步追踪<code>makeCompletingOnce</code>方法看看：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">JobSupport</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">internal</span> <span class="function"><span class="keyword">fun</span> <span class="title">makeCompletingOnce</span><span class="params">(proposedUpdate: <span class="type">Any</span>?)</span></span>: Any? &#123;</span><br><span class="line">        tryMakeCompleting(state, proposedUpdate)</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">tryMakeCompleting</span><span class="params">(state: <span class="type">Any</span>?, proposedUpdate: <span class="type">Any</span>?)</span></span>: Any? &#123;</span><br><span class="line">        <span class="keyword">if</span> ((state <span class="keyword">is</span> Empty || state <span class="keyword">is</span> JobNode) &amp;&amp; state !<span class="keyword">is</span> ChildHandleNode &amp;&amp; proposedUpdate !<span class="keyword">is</span> CompletedExceptionally) &#123;</span><br><span class="line">            tryFinalizeSimpleState(state, proposedUpdate)</span><br><span class="line">            <span class="keyword">return</span> proposedUpdate</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> tryMakeCompletingSlowPath(state, proposedUpdate)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>贴出的代码省略了各种中间状态，只保留主流程；其调用流程如下：</p>
+<p><img src="/kotlin-coroutine-exception/job_make_complete.drawio.png"></p>
+<p>可以看到，在<code>tryMakeCompleting</code>方法内，会对当前<code>Job</code>的状态进行一次判断，以决定走快路径还是走慢路径。所谓快路径和慢路径，区别在于慢路径需要处理一些中间状态，例如多个异常合并为一个异常、挂起等待子<code>Job</code>完成等状态，但结果都是殊途同归，和快路径一样，最终会扭转<code>Job</code>自身的状态，并通知子<code>Job</code>和父<code>Job</code>。</p>
+<p>先来看看慢路径，慢路径主要处理了多个异常合并为一个异常、挂起等待子<code>Job</code>完成等逻辑。总体流程如下：</p>
+<p><img src="/kotlin-coroutine-exception/job_make_completion_slow_path.drawio.png"></p>
+<p>这里有几个比较关键的方法，<code>nofityCancelling</code>、<code>tryWaitForChild</code>和<code>cancelParent</code></p>
+<h2 id="nofityCancelling-list-cause"><a href="#nofityCancelling-list-cause" class="headerlink" title="nofityCancelling(list, cause)"></a>nofityCancelling(list, cause)</h2><p>如其命名以及参数列表，这个方法最主要的职责是将异常通知给当前<code>Job</code>的子<code>Job</code>。查看代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">JobSupprot</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">notifyCancelling</span><span class="params">(list: <span class="type">NodeList</span>, cause: <span class="type">Throwable</span>)</span></span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">// 取消子Job</span></span><br><span class="line">        notifyHandlers&lt;JobCancellingNode&gt;(list, cause)</span><br><span class="line">        <span class="comment">// 取消当前Job</span></span><br><span class="line">        cancelParent(cause)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="tryWaitForChild"><a href="#tryWaitForChild" class="headerlink" title="tryWaitForChild"></a>tryWaitForChild</h2><h2 id="cancelParent"><a href="#cancelParent" class="headerlink" title="cancelParent"></a>cancelParent</h2>
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/kotlin-coroutine-nonblocking-suspend/" data-toggle="tooltip" data-placement="top" title="浅谈Kotlin协程(3)">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/kotlin-coroutine-launch/" data-toggle="tooltip" data-placement="top" title="浅谈Kotlin协程(2)">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/kotlin-coroutine-exception/";
+    var disqus_url = "https://spirytusz.co/kotlin-coroutine-exception/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

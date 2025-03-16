@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+          设计模式——观察者模式 - SpirytusZ&#39;s Blog
+        
+    </title>
+
+    <link rel="canonical" href="https://spirytusz.co/Observer/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/hux-blog.min.css">
+
+
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    <!-- Custom Fonts -->
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="https://cdn.staticfile.org/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">SpirytusZ&#39;s Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    
+<!-- Image to hack wechat -->
+<!-- <img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('observer_cover.jpeg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                          <a class="tag" href="/tags/#设计模式" title="设计模式">设计模式</a>
+                        
+                    </div>
+                    <h1>设计模式——观察者模式</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by spirytusz on
+                        2018-07-26
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>嗯，观察者模式在Android开发中还是挺常用的，比如说Adapter数据更新后RecyclerView的刷新，以及四大组件的Broadcast等等。接下来本文将简单谈谈设计模式中的观察和模式。<br>为了有更好的食用体验，本文会结合一个简单的例子，让你更好的理解观察者模式。</p>
+<span id="more"></span>
+
+<h2 id="一、观察者模式"><a href="#一、观察者模式" class="headerlink" title="一、观察者模式"></a>一、观察者模式</h2><p>先来看看定义：定义对象之间的一对多依赖关系，当一个对象改变状态时，它的所有依赖对象都会自动获得通知。<br>emmm…一对多依赖关系？？？状态改变依赖对象会被通知？？？定义有点拗口，不如直接看看一个例子。<br>小时候各位都有做过眼保健操吧，当广播响起眼保健操的音乐时，我们就开始做眼保健操。此时，广播和学生构成了一对多的依赖：当广播播放眼保健操的音乐时，即广播的状态发生改变时，我们获得要开始做眼保健操的通知。</p>
+<h2 id="二、观察者模式中的角色"><a href="#二、观察者模式中的角色" class="headerlink" title="二、观察者模式中的角色"></a>二、观察者模式中的角色</h2><p>观察者模式，就像它的名字一样，这个设计模式中有一个角色叫『观察者』，同样的也有一个角色叫『被观察者』。它们都是抽象出来的概念，因此它们的具体的实现是『具体观察者』和『具体被观察者』。<br>在上面的例子中，『广播』扮演的的是『被观察者』的角色；『发送眼保健操音乐的广播』扮演的是『具体被观察者』的角色；『学生』扮演的是『具体观察者』的角色；而『观察者』的角色并不明显，它扮演的是接口的角色。如下例子：<br>定义观察者：</p>
+<figure class="highlight java"><figcaption><span>Observer.java</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Observer</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">doSomething</span><span class="params">(BroadCast broadCast)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义具体观察者——Student</p>
+<figure class="highlight java"><figcaption><span>Student.java</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Student</span> <span class="keyword">implements</span> <span class="title class_">Observer</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">TAG</span> <span class="operator">=</span> Student.class.getSimpleName();</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomething</span><span class="params">(BroadCast broadCast)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="string">&quot;send Eye Exercises BroadCast! &quot;</span>.equals(broadCast.getBroadCast())) &#123;</span><br><span class="line">            System.out.println(TAG + <span class="string">&quot;: I will do eye exercises!&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            System.out.println(TAG + <span class="string">&quot;:I will be back home!&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义被观察者——BroadCast：</p>
+<figure class="highlight java"><figcaption><span>BroadCast.java</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">BroadCast</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> List&lt;Observer&gt; observers = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">register</span><span class="params">(Observer observer)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!observers.contains(observer)) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (BroadCast.class) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!observers.contains(observer)) &#123;</span><br><span class="line">                    observers.add(observer);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">unRegister</span><span class="params">(Observer observer)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!observers.contains(observer)) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (BroadCast.class) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!observers.contains(observer)) &#123;</span><br><span class="line">                    observers.remove(observer);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">notifyAllObserver</span><span class="params">()</span>&#123;</span><br><span class="line">        Iterator&lt;Observer&gt; iterator = observers.iterator();</span><br><span class="line">        <span class="keyword">while</span>(iterator.hasNext())&#123;</span><br><span class="line">            <span class="type">Observer</span> <span class="variable">observer</span> <span class="operator">=</span> iterator.next();</span><br><span class="line">            observer.doSomething(<span class="built_in">this</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> String <span class="title function_">getBroadCast</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title function_">sendBroadCast</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义具体的被观察者——眼保健操广播和放学铃声广播：</p>
+<figure class="highlight java"><figcaption><span>EyeExercisesBroadCast.java</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EyeExercisesBroadCast</span> <span class="keyword">extends</span> <span class="title class_">BroadCast</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">EyeExercisesBroadCast</span> <span class="variable">INSTANCE</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">EyeExercisesBroadCast</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String broadCastMessage;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">EyeExercisesBroadCast</span><span class="params">()</span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> EyeExercisesBroadCast <span class="title function_">getInstance</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> INSTANCE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getBroadCast</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> broadCastMessage;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sendBroadCast</span><span class="params">()</span> &#123;</span><br><span class="line">        broadCastMessage = <span class="string">&quot;send Eye Exercises BroadCast! &quot;</span>;</span><br><span class="line">        notifyAllObserver();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><figcaption><span>FinishClassBroadCast.java</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FinishClassBroadCast</span> <span class="keyword">extends</span> <span class="title class_">BroadCast</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">FinishClassBroadCast</span> <span class="variable">INSTANCE</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FinishClassBroadCast</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String broadCastMessage;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="title function_">FinishClassBroadCast</span><span class="params">()</span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> FinishClassBroadCast <span class="title function_">getInstance</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> INSTANCE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getBroadCast</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> broadCastMessage;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">sendBroadCast</span><span class="params">()</span> &#123;</span><br><span class="line">        broadCastMessage = <span class="string">&quot;send finish class BroadCast! &quot;</span>;</span><br><span class="line">        notifyAllObserver();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>另外在定义两个辅助类Main和Teacher，Main负责执行代码，而Teacher是广播的管理者，可以管理广播的发送</p>
+<figure class="highlight java"><figcaption><span>Main.java</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Main</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">Student</span> <span class="variable">student</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Student</span>();</span><br><span class="line">        <span class="type">BroadCast</span> <span class="variable">broadCast1</span> <span class="operator">=</span> EyeExercisesBroadCast.getInstance();</span><br><span class="line">        <span class="type">BroadCast</span> <span class="variable">broadCast2</span> <span class="operator">=</span> FinishClassBroadCast.getInstance();</span><br><span class="line">        broadCast1.register(student);</span><br><span class="line">        broadCast2.register(student);</span><br><span class="line">        <span class="type">Teacher</span> <span class="variable">teacher</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Teacher</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><figcaption><span>Teacher.java</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Teacher</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">TAG</span> <span class="operator">=</span> Teacher.class.getSimpleName();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> BroadCast[] broadCasts;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Teacher</span><span class="params">()</span> &#123;</span><br><span class="line">        init();</span><br><span class="line">        System.out.println(TAG+<span class="string">&quot;: I send eye exercises broadcast! &quot;</span>);</span><br><span class="line">        sendEyeExercisesBroadCast();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            TimeUnit.SECONDS.sleep((<span class="type">int</span>) (Math.random() * <span class="number">6</span>));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(TAG+<span class="string">&quot;: I send finish class broadcast! &quot;</span>);</span><br><span class="line">        sendFinishClassBroadCast();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">()</span> &#123;</span><br><span class="line">        broadCasts = <span class="keyword">new</span> <span class="title class_">BroadCast</span>[<span class="number">2</span>];</span><br><span class="line">        broadCasts[<span class="number">0</span>] = EyeExercisesBroadCast.getInstance();</span><br><span class="line">        broadCasts[<span class="number">1</span>] = FinishClassBroadCast.getInstance();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">sendEyeExercisesBroadCast</span><span class="params">()</span> &#123;</span><br><span class="line">        broadCasts[<span class="number">0</span>].sendBroadCast();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">sendFinishClassBroadCast</span><span class="params">()</span>&#123;</span><br><span class="line">        broadCasts[<span class="number">1</span>].sendBroadCast();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此时运行程序，当广播播放眼保健操的音乐时，学生便收到通知，开始做眼保健操；当广播播放放学铃声时，学生便收到通知，开始离校。运行结果如下：</p>
+<img src="/Observer/result.png" class="" title="运行结果">
+
+<h2 id="三、观察者模式的工作原理"><a href="#三、观察者模式的工作原理" class="headerlink" title="三、观察者模式的工作原理"></a>三、观察者模式的工作原理</h2><p>在观察者模式中，Observer观察Observable。这个过程有几个关键点：</p>
+<ul>
+<li>与大部分现实不同的是，Observer不是主动观察，而是被动的接收来自Observable的通知</li>
+<li>Observable要知道谁在观察它，才能在状态改变的时候通知，因此它需要维护一个List&lt;Observer&gt;</li>
+<li>Observer中要有一个传入Observable参数的回调方法，以便Observer在收到通知时能够获得Observable的状态</li>
+</ul>
+<p>首先，Observer是被动的接收来自Observable的通知，因为我们引入观察者模式的目的之一就是为了避免轮询消耗CPU资源，所以比较合适的方法应该是当Observable状态发生改变时再去通知Observer。就像上面的例子，脑补一下画面：学生不必不停的问老师：放学了吗？放学了吗？放学了吗？…老师回答：没有。没有。没有。…放学了。这样很喜感，也太消耗体力(CPU资源)。</p>
+<p>其次，正是因为Observable需要通知Observer，所以Observable需要知道谁是Observer，即需要存储所有Observer对象，因此它需要维护一个List&lt;Observer&gt;，至于List&lt;Observer&gt;的数据结构如何选用，就要看看实际情况了。就像上面的例子：因为广播(即Observable)知道它要通知的是学生，所以才会被安装在教室和走廊里(不然装在闹市区突然响起眼保健操的音乐，路人一脸黑人问号)。</p>
+<p>最后，Observer需要知道Observable的通知内容，因此Observable要在回调函数(的参数)中放入通知内容，Observer可以在回调函数中(的参数)获得通知内容。在上面的例子中，学生是可以通过广播获得放学的信息的。</p>
+<p>另外，如果存在优先级的问题，可以List&lt;Observer&gt;把按优先级排序以下，再进行通知。如果在通知的时候(for循环里面)加一点逻辑，可以实现类似于Android系统中有序广播的功能。</p>
+<h2 id="四、回调函数的参数列表"><a href="#四、回调函数的参数列表" class="headerlink" title="四、回调函数的参数列表"></a>四、回调函数的参数列表</h2><p>在第三部分提到，Observer可以通过回调函数获取通知内容。但是这个通知内容是什么？是直接传一个Observable参数好，还是直接传message参数的参数好？还是两个一起传？不如分别讨论。</p>
+<h3 id="4-1-只传Observable参数"><a href="#4-1-只传Observable参数" class="headerlink" title="4.1.只传Observable参数"></a>4.1.只传Observable参数</h3><p>只传Observable参数，简单，不会有一大堆重载函数。但是可能会有意想不到的安全问题：Student类实现了Observer接口，可以通过doSomething(BroadCast)获取BroadCast对象，然而BroadCast的notifyAllObserver方法是public的！即使我们相信学生不会为了恶作剧而重复发广播，但是这个问题还是有可能发生的。从编程的角度，在代码运行时，如果观察者接收到信息后调用BroadCast.notifyAllObserver()方法后，是会爆栈的。比如说，修改Student.doSomething(BroadCast)方法：</p>
+<figure class="highlight java"><figcaption><span>Student.doSomething(BroadCast)</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomething</span><span class="params">(BroadCast broadCast)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(<span class="string">&quot;send Eye Exercises BroadCast! &quot;</span>.equals(broadCast.getBroadCast()))&#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;: I will do eye exercises!&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass().getName()+<span class="string">&quot;:I will be back home!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    broadCast.notifyAllObserver();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里增加了一行broadCast.notifyAllObserver()，再重新执行main方法，结果如下：</p>
+<img src="/Observer/StackBomb.png" class="" title="StackBomb">
+
+<p>很不幸爆栈了。因此我们要把notifyAllObserver方法屏蔽掉，只有BroadCast及其它的子类能碰。因此notifyAllObserver方法需要被protected关键词修饰，并且其BroadCast的子类需要和BroadCast同包。修改后包结构如下：</p>
+<img src="/Observer/PackageStructure.png" class="" title="Package Structure">
+
+<p>通过修改notifyAllObserver()的访问权限，就能解决安全问题。</p>
+<h3 id="4-2-只传message参数"><a href="#4-2-只传message参数" class="headerlink" title="4.2.只传message参数"></a>4.2.只传message参数</h3><p>只传message参数？似乎看起来并没有什么问题。但是message可能不止一个！而且Observable不知道Observer需要什么样的message。假设多个Observer要观察Observable中的n个message中任意多个，它们需要的message可能各不相同。所以回调函数就必须要有2<sup>n</sup>个，这样才可以满足所有Observer的需求。显然这样是不可取的，因为重载函数的增加降低了程序的可维护性。同时，当Observer观察多个Observable时，当某一个Observable通知它时，Observer无法得知是哪个Observable更新了，所以只传message参数是有一定局限的。</p>
+<h3 id="4-3-同时传Observable和message"><a href="#4-3-同时传Observable和message" class="headerlink" title="4.3.同时传Observable和message"></a>4.3.同时传Observable和message</h3><p>4.2中已经说明，当message有多个时，需要对应指数级个的回调函数，所以在这种多个message的情况下，还是尽量不要传message参数为好。</p>
+<p>所以，个人认为回调函数因只需要传入一个Observable参数。</p>
+<h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p>一个类可以实现Observer接口来获得『观察』的功能；一个类可以实现Observable接口&#x2F;抽象类来获得『可观察』的属性。当观察者需要观察被观察者时，它需要实例化出一个被观察者对象，然后调用被观察者的注册方法来注册自己，以便被观察者状态改变时，能够通知自己。<br>个人认为，观察者模式本质是维护一个回调函数集合，在被观察者发生改变时，被观察者便逐个调用这些回调函数，这时观察者就被通知了。<br>另外，基于观察者模式的特性，个人认为观察者模式特别适用于一些异步操作，比如IO操作和网络请求(下载图片并显示在ImageView上等)。</p>
+<h2 id="六、感想"><a href="#六、感想" class="headerlink" title="六、感想"></a>六、感想</h2><p>事实上观察者模式不是我第一个接触的设计模式，我第一个接触的设计模式是『构建者模式』，当时是在学Android开发中的自定义View，没有资料来源所以只能硬啃别人的自定义View的代码，在里面View有必选属性和可选属性，多个构造方法重载和JavaBean模式都不理想，因此构建者模式才被设计出来，结合了这个场景，我也就理解了构建者模式的设计初衷和原理。回到观察者模式，在学Android开发的时候，使用到了RecyclerView，当时不理解为什么它的数据更新的机制，后来看了这本书<a href="https://book.douban.com/subject/26744163/">《Android开发进阶从小工到专家》</a>，原来RecyclerView的数据更新是适配器模式+观察者模式！结合这本书里面的部分源码，我才理解了RecyclerView的数据更新机制，也就顺手理解了观察者模式的设计初衷。<br>所以设计模式，还是要结合实际场景来学，才能更容易理解然后运用。</p>
+
+
+                <hr>
+
+                
+
+                <ul class="pager">
+                    
+                        <li class="previous">
+                            <a href="/DraggableFloatingActionButton/" data-toggle="tooltip" data-placement="top" title="可拖拽的FloatingActionButton">&larr; Previous Post</a>
+                        </li>
+                    
+                    
+                        <li class="next">
+                            <a href="/quicksort/" data-toggle="tooltip" data-placement="top" title="快速排序不快了？重复元素下的快速排序">Next Post &rarr;</a>
+                        </li>
+                    
+                </ul>
+
+                
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+            </div>
+    <!-- Side Catalog Container -->
+        
+
+    <!-- Sidebar Container -->
+
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "spirytusz";
+    var disqus_identifier = "https://spirytusz.co/Observer/";
+    var disqus_url = "https://spirytusz.co/Observer/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                
+                
+                
+
+                
+
+                
+
+                
+                    <li>
+                        <a target="_blank"  href="https://github.com/spirytusz">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; SpirytusZ&#39;s Blog 2025 
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> 
+                    <span style="display: inline-block; margin: 0 5px;">
+                        <i class="fa fa-heart"></i>
+                    </span> 
+                    Ported by <a href="http://blog.kaijun.rocks">Kaijun</a> | 
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=kaijun&repo=hexo-theme-huxblog&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://spirytusz.co/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="https://spirytusz.co/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>
